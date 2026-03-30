@@ -7,7 +7,6 @@ import argparse
 
 from model import CNN as BaselineCNN
 from mini_tasks.task1 import CNN as Task1CNN
-from mini_tasks.task2 import CNN as Task2CNN
 from train import train, test
 
 def get_model(name):
@@ -15,8 +14,6 @@ def get_model(name):
         return BaselineCNN()
     elif name == "task1":
         return Task1CNN()
-    elif name == "task2":
-        return Task2CNN()
 
 def run(name):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
