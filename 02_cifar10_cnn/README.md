@@ -1,8 +1,19 @@
 # 02_cifar10_cnn
 
+## Core Concepts
+
+Notes: $O = \frac{I + 2P - K}{S} + 1$
+
+- I: Input size
+- P: Padding
+- K: Kernel size
+- S: Stride
+
+--- 
 ## CIFAR10 Experiment
 
 ### CIFAR10 Dataset
+
 - Image size: 32 × 32 (RGB)
 - Classes: 10
 - Training data: 50,000 samples
@@ -26,42 +37,51 @@ Baseline Model
 - Training setup
     - Epochs: 3
     - Batch size: 32
-- Accuracy: 67.26%
+
+- Train Loss: 0.8996
+- Train Accuracy: 68.41%
+- Validation Loss: 0.9565-
+- Validation Accuracy: 66.90%
 
 ---
 
-### Mini Task
+### Mini Task: Model Performance Improvement
 
-Changes applied:
+1. Conv layers: 2 → 3, Kernel size: 3 → 5
 
-- Conv layers: 2 → 3
-- Kernel size: 3 → 5
+    Improved feature extraction by increasing model depth and kernel size.
 
-Task1 model
+    **Task1 model**
 
-| Layer       | Output Shape     | Details                     |
-|-------------|------------------|-----------------------------|
-| Input       | (3, 32, 32)      |                             |
-| Conv1       | (16, 32, 32)     | 5x5, padding=2              |
-| MaxPool     | (16, 16, 16)     | 2x2                         |
-| Conv2       | (32, 16, 16)     | 5x5, padding=2              |
-| MaxPool     | (32, 8, 8)       | 2x2                         |
-| Conv3       | (64, 8, 8)       | 5x5, padding=2              |
-| MaxPool     | (64, 4, 4)       | 2x2                         |
-| Flatten     | (1024)           |                             |
-| FC1         | (128)            | ReLU                        |
-| FC2         | (10)             |                             |
+    | Layer       | Output Shape     | Details                     |
+    |-------------|------------------|-----------------------------|
+    | Input       | (3, 32, 32)      |                             |
+    | Conv1       | (16, 32, 32)     | 5x5, padding=2              |
+    | MaxPool     | (16, 16, 16)     | 2x2                         |
+    | Conv2       | (32, 16, 16)     | 5x5, padding=2              |
+    | MaxPool     | (32, 8, 8)       | 2x2                         |
+    | Conv3       | (64, 8, 8)       | 5x5, padding=2              |
+    | MaxPool     | (64, 4, 4)       | 2x2                         |
+    | Flatten     | (1024)           |                             |
+    | FC1         | (128)            | ReLU                        |
+    | FC2         | (10)             |                             |
 
-- Accuracy: 70.78%
+    - Train Loss: 0.8349
+    - Train Accuracy: 70.39%
+    - Validation Loss: 0.8846
+    - Validation Accuracy: 69.30%
 
-Notes: $O = \frac{I + 2P - K}{S} + 1$
+2. Epoch Increase (3 → 10)
 
-- I: Input size
-- P: Padding
-- K: Kernel size
-- S: Stride
+    The model was trained for 10 epochs to improve learning.
+
+    - Train Loss: 0.2900 
+    - Train Accuracy: 89.68%
+    - Validation Loss: 1.1662
+    - Validation Accuracy: 71.94%
+
+    **Analysis**
+
+    - The validation accuracy is lower than the training accuracy, suggesting that the model may be overfitting to the training data.
 
 ---
-
-### Result
-The Task 1 model improved accuracy by 3.52% compared to the baseline model.
