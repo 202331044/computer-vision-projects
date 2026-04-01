@@ -33,6 +33,10 @@ Notes: $O = \frac{I + 2P - K}{S} + 1$
 
 Baseline Model
 
+- Training setup
+    - Epochs: 3
+    - Batch size: 32
+
 | Layer       | Output Shape     | Details                     |
 |-------------|------------------|-----------------------------|
 | Input       | (3, 32, 32)      |                             |
@@ -44,14 +48,15 @@ Baseline Model
 | FC1         | (128)            | ReLU                        |
 | FC2         | (10)             |                             |
 
-- Training setup
-    - Epochs: 3
-    - Batch size: 32
+** Best Model (selected by validation accuracy) **
 
-- Train Loss: 0.8974
-- Train Accuracy: 68.33%
-- Validation Loss: 0.9125
-- Validation Accuracy: 67.28%
+| Metric | Value |
+|--------|------|
+| Epoch | 3 |
+| Train Loss | 0.8974 |
+| Train Accuracy | 68.33% |
+| Validation Loss | 0.9125 |
+| Validation Accuracy | 67.28% |
 
 ---
 
@@ -76,22 +81,54 @@ Baseline Model
     | FC1         | (128)            | ReLU                        |
     | FC2         | (10)             |                             |
 
-    - Train Loss: 0.8639
-    - Train Accuracy: 69.65%
-    - Validation Loss: 0.9045
-    - Validation Accuracy: 67.90%
+    ** Best Model (selected by validation accuracy) **
 
-2. Epoch Increase (3 → 10)
+    | Metric | Value |
+    |--------|------|
+    | Epoch | 3 |
+    | Train Loss | 0.8639 |
+    | Train Accuracy | 69.65% |
+    | Validation Loss | 0.9045 |
+    | Validation Accuracy | 67.90% |
+
+2. Epoch: 3 → 10
 
     The model was trained for 10 epochs to improve learning.
 
-    - Train Loss: 0.3256
-    - Train Accuracy: 88.35%
-    - Validation Loss: 0.9534
-    - Validation Accuracy: 72.66%
+    **Best Model (selected by validation accuracy)**
+
+    | Metric | Value |
+    |--------|------|
+    | Epoch | 6 |
+    | Train Loss | 0.5484 |
+    | Train Accuracy | 80.72% |
+    | Validation Loss | 0.8244 |
+    | Validation Accuracy | 72.78% |
 
     **Analysis**
 
     - The validation accuracy is lower than the training accuracy, suggesting that the model may be overfitting to the training data.
+
+3. Training Improvements
+
+    Several training strategies were applied to improve model performance:
+
+    - Early Stopping: epochs = 100, patience = 7
+    - Batch Size: 32 → 64
+    - Optimizer Comparison:
+        - Adam
+        - SGD
+        - AdamW
+        - SGD + Momentum
+    
+    **Best Model (AdamW, selected by validation accuracy)**
+
+    | Metric | Value |
+    |--------|------|
+    | Epoch | 9 |
+    | Train Loss | 0.4213 |
+    | Train Accuracy | 85.02% |
+    | Validation Loss | 0.8645 |
+    | Validation Accuracy | 73.72% |
 
 ---

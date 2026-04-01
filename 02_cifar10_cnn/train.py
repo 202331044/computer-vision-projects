@@ -1,6 +1,9 @@
 import torch
 
-def train(epochs, device, train_data, val_data, model, loss_function, optimizer):
+def train(epochs, patience, device, train_data, val_data, model, loss_function, optimizer):
+    best_loss = float('inf')
+    count = 0
+
     for epoch in range(epochs):
         model.train()
         total_loss = 0
@@ -32,6 +35,17 @@ def train(epochs, device, train_data, val_data, model, loss_function, optimizer)
         train_loss = total_loss/total
         train_acc = correct/total * 100
         val_loss, val_acc = evaluate(device, val_data, model, loss_function)
+
+        if best_loss > val_loss:
+            best_loss = val_loss
+            count = 0
+            #torch.save(mode.state_dict(), "best.pth")
+        else:
+            count += 1
+
+        if count >= patience:
+            print("Early Stopping")
+            break
 
         print(f"Epoch: {epoch + 1}")
         print(f"Train Loss: {train_loss:.4f} Train Acc: {train_acc:.2f}%")
