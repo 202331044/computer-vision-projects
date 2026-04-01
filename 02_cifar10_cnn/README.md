@@ -1,5 +1,13 @@
 # 02_cifar10_cnn
 
+## Key Components
+
+`sklearn`: Data splitting, preprocessing, and evaluation utilities
+
+`sklearn.model_selection`: Train/validation splitting and cross-validation module
+
+---
+
 ## Core Concepts
 
 Notes: $O = \frac{I + 2P - K}{S} + 1$
@@ -8,6 +16,8 @@ Notes: $O = \frac{I + 2P - K}{S} + 1$
 - P: Padding
 - K: Kernel size
 - S: Stride
+
+`train_test_split`: split and shuffle data, index return
 
 --- 
 ## CIFAR10 Experiment
@@ -38,10 +48,10 @@ Baseline Model
     - Epochs: 3
     - Batch size: 32
 
-- Train Loss: 0.8996
-- Train Accuracy: 68.41%
-- Validation Loss: 0.9565-
-- Validation Accuracy: 66.90%
+- Train Loss: 0.8974
+- Train Accuracy: 68.33%
+- Validation Loss: 0.9125
+- Validation Accuracy: 67.28%
 
 ---
 
@@ -66,19 +76,19 @@ Baseline Model
     | FC1         | (128)            | ReLU                        |
     | FC2         | (10)             |                             |
 
-    - Train Loss: 0.8349
-    - Train Accuracy: 70.39%
-    - Validation Loss: 0.8846
-    - Validation Accuracy: 69.30%
+    - Train Loss: 0.8639
+    - Train Accuracy: 69.65%
+    - Validation Loss: 0.9045
+    - Validation Accuracy: 67.90%
 
 2. Epoch Increase (3 → 10)
 
     The model was trained for 10 epochs to improve learning.
 
-    - Train Loss: 0.2900 
-    - Train Accuracy: 89.68%
-    - Validation Loss: 1.1662
-    - Validation Accuracy: 71.94%
+    - Train Loss: 0.3256
+    - Train Accuracy: 88.35%
+    - Validation Loss: 0.9534
+    - Validation Accuracy: 72.66%
 
     **Analysis**
 
