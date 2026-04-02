@@ -17,8 +17,9 @@ Notes: $O = \frac{I + 2P - K}{S} + 1$
 - K: Kernel size
 - S: Stride
 
-`train_test_split`: split and shuffle data, index return
+`train_test_split`: splits and returns data
 
+`StratifiedKFold().split()` returns train and validation indices, ensuring that class distribution is preserved
 --- 
 ## CIFAR10 Experiment
 
@@ -131,4 +132,20 @@ Baseline Model
     | Validation Loss | 0.8645 |
     | Validation Accuracy | 73.72% |
 
+4. Add Cross-Validation
+
+    Implemented stratified k-fold cross-validation to evaluate model performance on different data subsets.
+
+    - Optimizer: AdamW
+    - K-fold: 5
+
+    | Metric | Value |
+    |--------|------|
+    | Validation Mean Loss | 1.0119|
+    | Validation Mean Accuracy | 68.91% |
+
+    **Analysis**
+
+    - Since the average accuracy was used, the result is lower than the previous attempt (3.), 
+    which used the highest accuracy.
 ---
