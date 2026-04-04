@@ -6,6 +6,12 @@
 
 `sklearn.model_selection`: Train/validation splitting and cross-validation module
 
+`train_test_split`: Splits and returns data
+
+`StratifiedKFold().split()`: Returns train and validation indices, ensuring that class distribution is preserved
+
+`torch.optim.lr_scheduler`: Provides modules to dynamically adjust the learning rate during training
+
 ---
 
 ## Core Concepts
@@ -17,9 +23,6 @@ Notes: $O = \frac{I + 2P - K}{S} + 1$
 - K: Kernel size
 - S: Stride
 
-`train_test_split`: splits and returns data
-
-`StratifiedKFold().split()` returns train and validation indices, ensuring that class distribution is preserved
 --- 
 ## CIFAR10 Experiment
 
@@ -139,6 +142,7 @@ Baseline Model
     - Optimizer: AdamW
     - K-fold: 5
 
+
     | Metric | Value |
     |--------|------|
     | Validation Mean Loss | 1.0119|
@@ -148,4 +152,44 @@ Baseline Model
 
     - Since the average accuracy was used, the result is lower than the previous attempt (3.), 
     which used the highest accuracy.
+
+5. Adjust Learning Rate
+
+    Compare model performance using different learning rate schedulers
+
+    - CosineAnnealingLR
+        - optimizer: AdamW
+        - T_max=epochs
+        - eta_min=1e-6
+
+    - OneCycleLR
+        - optimizer: AdamW
+        - max_lr = 0.01
+        - steps_per_epoch=len(train_data)
+        - epochs=epochs
+
+    **CosineAnnealingLR**
+
+    | Metric | Value |
+    |--------|------|
+    | Validation Mean Loss | 0.9951 |
+    | Validation Mean Accuracy | 68.70% |
+
+    **OneCycleLR**
+
+    | Metric | Value |
+    |--------|------|
+    | Validation Mean Loss | 1.0435 |
+    | Validation Mean Accuracy | 64.55% |
+
+    **Comparison with Baseline**
+
+    Compared to the model without a learning rate scheduler:
+
+    - Baseline Validation Accuracy: 68.91%
+    - CosineAnnealingLR: 68.70%
+    - OneCycleLR: 64.55%
+
+    Both schedulers resulted in lower performance compared to the baseline.
+    
 ---
