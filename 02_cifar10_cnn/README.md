@@ -1,30 +1,51 @@
 # 02_cifar10_cnn
 
-## Key Components
+## Core Libraries
 
-`sklearn`: Data splitting, preprocessing, and evaluation utilities
+### torch
 
-`sklearn.model_selection`: Train/validation splitting and cross-validation module
+`torch.optim`: Module for updating model parameters (optimizers)
 
-`train_test_split`: Splits and returns data
+`torch.optim.lr_scheduler`: Module for updating the learning rate during training
 
-`StratifiedKFold().split()`: Returns train and validation indices, ensuring that class distribution is preserved
+### sklearn
 
-`torch.optim.lr_scheduler`: Provides modules to dynamically adjust the learning rate during training
+`sklearn`: Tools for traditional machine learning and data processing
+
+`sklearn.model_selection`: Core module for splitting datasets
+
+`sklearn.model_selection.train_test_split()`: Function for splitting datasets
+
+`sklearn.model_selection.StratifiedKFold (skf)`: Class for performing K-fold cross-validation while preserving class distribution
+
+`skf.split()`: Function for returning indices corresponding to the training and validation data
+
+### numpy
+
+`numpy (np)`: Core library for numerical computations
+
+`np.unique()`: Function that removes duplicates and returns unique values
+
+`np.where()`: Function that returns indices satisfying a condition or selects values based on a condition
+
+`np.arange()`: Function that generates numbers at regular intervals
 
 ---
 
 ## Core Concepts
 
-Notes: $O = \frac{I + 2P - K}{S} + 1$
+**Conv / Pooling output size Formula**
 
+$O = \frac{\lfloor I + 2P - K \rfloor}{S} + 1$
+
+- O: Output size
 - I: Input size
 - P: Padding
 - K: Kernel size
 - S: Stride
 
 --- 
-## CIFAR10 Experiment
+## Experiment
 
 ### CIFAR10 Dataset
 
@@ -35,7 +56,7 @@ Notes: $O = \frac{I + 2P - K}{S} + 1$
 
 ### Model Architecture
 
-Baseline Model
+**Baseline Model**
 
 - Training setup
     - Epochs: 3
@@ -52,7 +73,8 @@ Baseline Model
 | FC1         | (128)            | ReLU                        |
 | FC2         | (10)             |                             |
 
-** Best Model (selected by validation accuracy) **
+
+**Best Model (selected by validation accuracy)**
 
 | Metric | Value |
 |--------|------|
@@ -66,7 +88,7 @@ Baseline Model
 
 ### Mini Task: Model Performance Improvement
 
-1. Conv layers: 2 → 3, Kernel size: 3 → 5
+1. **Conv layers: 2 → 3, Kernel size: 3 → 5**
 
     Improved feature extraction by increasing model depth and kernel size.
 
@@ -85,7 +107,8 @@ Baseline Model
     | FC1         | (128)            | ReLU                        |
     | FC2         | (10)             |                             |
 
-    ** Best Model (selected by validation accuracy) **
+    
+    **Best Model (selected by validation accuracy)**
 
     | Metric | Value |
     |--------|------|
@@ -95,7 +118,8 @@ Baseline Model
     | Validation Loss | 0.9045 |
     | Validation Accuracy | 67.90% |
 
-2. Epoch: 3 → 10
+
+2. **Epoch: 3 → 10**
 
     The model was trained for 10 epochs to improve learning.
 
@@ -113,7 +137,8 @@ Baseline Model
 
     - The validation accuracy is lower than the training accuracy, suggesting that the model may be overfitting to the training data.
 
-3. Training Improvements
+
+3. **Training Improvements**
 
     Several training strategies were applied to improve model performance:
 
@@ -135,13 +160,13 @@ Baseline Model
     | Validation Loss | 0.8645 |
     | Validation Accuracy | 73.72% |
 
-4. Add Cross-Validation
+
+4. **Add Cross-Validation**
 
     Implemented stratified k-fold cross-validation to evaluate model performance on different data subsets.
 
     - Optimizer: AdamW
     - K-fold: 5
-
 
     | Metric | Value |
     |--------|------|
@@ -153,7 +178,8 @@ Baseline Model
     - Since the average accuracy was used, the result is lower than the previous attempt (3.), 
     which used the highest accuracy.
 
-5. Adjust Learning Rate
+
+5. **Adjust Learning Rate**
 
     Compare model performance using different learning rate schedulers
 
@@ -168,14 +194,14 @@ Baseline Model
         - steps_per_epoch=len(train_data)
         - epochs=epochs
 
-    **CosineAnnealingLR**
+    **CosineAnnealingLR Scheduler**
 
     | Metric | Value |
     |--------|------|
     | Validation Mean Loss | 0.9951 |
     | Validation Mean Accuracy | 68.70% |
 
-    **OneCycleLR**
+    **OneCycleLR Scheduler**
 
     | Metric | Value |
     |--------|------|
@@ -184,7 +210,7 @@ Baseline Model
 
     **Comparison with Baseline**
 
-    Compared to the model without a learning rate scheduler:
+    Compared to the baseline model without a learning rate scheduler:
 
     - Baseline Validation Accuracy: 68.91%
     - CosineAnnealingLR: 68.70%
