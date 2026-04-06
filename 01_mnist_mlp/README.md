@@ -82,11 +82,7 @@ Tensor
 
 ### Model Architecture
 
-**Baseline Model**
-
-- Training setup
-    - Epochs: 3
-    - Batch size: 64
+#### Baseline Model
 
 | Layer       | Output Shape     | Details                     |
 |-------------|------------------|-----------------------------|
@@ -95,21 +91,46 @@ Tensor
 | FC1         | (128)            | ReLU                        |
 | FC2         | (10)             |                             |
 
+### Training setup
+- Epochs: 3
+- Batch size: 64
 
-- Accuracy: 96.68%
+### Results
 
-### Mini Task
+| Metric | Value |
+|--------|------|
+| Test Accuracy | 96.68% |
 
-**Changes applied:**
+---
 
-- Epochs: 3 → 5
-- Batch size: 64 → 128
-- Hidden layer size: 128 → 256
+### Mini Task: Model Performance Improvement
 
-**Task1 model**
+#### 1. Hyperparameter Tuning 
 
-- Accuracy: 97.46%
+Epochs: 3 → 5, Batch size: 64 → 128, Hidden layer size: 128 → 256
 
-**Analysis**
+##### Results
 
-The Task 1 model improved accuracy by 0.78% compared to the baseline model.
+| Metric | Value |
+|--------|------|
+| Test Accuracy | 97.46% |
+
+##### Analysis
+
+The Task 1 model improved test accuracy by 0.78% compared to the baseline model.
+
+
+#### 2. Training Improvements
+
+Several training strategies were applied to improve model performance:
+
+- Early Stopping: epochs = 100, patience = 5
+- Cross-validation: K-fold = 5
+- Batch size: 64
+- Optimizer: Adam
+- Model: task1 
+
+| Metric | Value |
+|--------|------|
+| Validation Mean Loss | 0.1001 |
+| Validation Mean Accuracy| 97.15% |
