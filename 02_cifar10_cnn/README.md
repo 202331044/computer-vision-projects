@@ -56,11 +56,7 @@ $O = \frac{\lfloor I + 2P - K \rfloor}{S} + 1$
 
 ### Model Architecture
 
-**Baseline Model**
-
-- Training setup
-    - Epochs: 3
-    - Batch size: 32
+#### Baseline Model
 
 | Layer       | Output Shape     | Details                     |
 |-------------|------------------|-----------------------------|
@@ -73,8 +69,12 @@ $O = \frac{\lfloor I + 2P - K \rfloor}{S} + 1$
 | FC1         | (128)            | ReLU                        |
 | FC2         | (10)             |                             |
 
+### Training setup
 
-**Best Model (selected by validation accuracy)**
+- Epochs: 3
+- Batch size: 32
+
+### Best Model (selected by validation accuracy)
 
 | Metric | Value |
 |--------|------|
@@ -88,134 +88,140 @@ $O = \frac{\lfloor I + 2P - K \rfloor}{S} + 1$
 
 ### Mini Task: Model Performance Improvement
 
-1. **Conv layers: 2 → 3, Kernel size: 3 → 5**
+#### 1. Hyperparameter Tuning (Model Architecture)
 
-    Improved feature extraction by increasing model depth and kernel size.
+Conv layers: 2 → 3, Kernel size: 3 → 5
 
-    **Task1 model**
+Feature extraction was improved by increasing model depth and kernel size.
 
-    | Layer       | Output Shape     | Details                     |
-    |-------------|------------------|-----------------------------|
-    | Input       | (3, 32, 32)      |                             |
-    | Conv1       | (16, 32, 32)     | 5x5, padding=2              |
-    | MaxPool     | (16, 16, 16)     | 2x2                         |
-    | Conv2       | (32, 16, 16)     | 5x5, padding=2              |
-    | MaxPool     | (32, 8, 8)       | 2x2                         |
-    | Conv3       | (64, 8, 8)       | 5x5, padding=2              |
-    | MaxPool     | (64, 4, 4)       | 2x2                         |
-    | Flatten     | (1024)           |                             |
-    | FC1         | (128)            | ReLU                        |
-    | FC2         | (10)             |                             |
+##### Task1 model
 
-    
-    **Best Model (selected by validation accuracy)**
+| Layer       | Output Shape     | Details                     |
+|-------------|------------------|-----------------------------|
+| Input       | (3, 32, 32)      |                             |
+| Conv1       | (16, 32, 32)     | 5x5, padding=2              |
+| MaxPool     | (16, 16, 16)     | 2x2                         |
+| Conv2       | (32, 16, 16)     | 5x5, padding=2              |
+| MaxPool     | (32, 8, 8)       | 2x2                         |
+| Conv3       | (64, 8, 8)       | 5x5, padding=2              |
+| MaxPool     | (64, 4, 4)       | 2x2                         |
+| Flatten     | (1024)           |                             |
+| FC1         | (128)            | ReLU                        |
+| FC2         | (10)             |                             |
 
-    | Metric | Value |
-    |--------|------|
-    | Epoch | 3 |
-    | Train Loss | 0.8639 |
-    | Train Accuracy | 69.65% |
-    | Validation Loss | 0.9045 |
-    | Validation Accuracy | 67.90% |
+##### Best Model (selected by validation accuracy)
 
-
-2. **Epoch: 3 → 10**
-
-    The model was trained for 10 epochs to improve learning.
-
-    **Best Model (selected by validation accuracy)**
-
-    | Metric | Value |
-    |--------|------|
-    | Epoch | 6 |
-    | Train Loss | 0.5484 |
-    | Train Accuracy | 80.72% |
-    | Validation Loss | 0.8244 |
-    | Validation Accuracy | 72.78% |
-
-    **Analysis**
-
-    - The validation accuracy is lower than the training accuracy, suggesting that the model may be overfitting to the training data.
+| Metric | Value |
+|--------|------|
+| Epoch | 3 |
+| Train Loss | 0.8639 |
+| Train Accuracy | 69.65% |
+| Validation Loss | 0.9045 |
+| Validation Accuracy | 67.90% |
 
 
-3. **Training Improvements**
+#### 2. Hyperparameter Tuning (Training Setup)
 
-    Several training strategies were applied to improve model performance:
+Epoch: 3 → 10
 
-    - Early Stopping: epochs = 100, patience = 7
-    - Batch Size: 32 → 64
-    - Optimizer Comparison:
-        - Adam
-        - SGD
-        - AdamW
-        - SGD + Momentum
-    
-    **Best Model (AdamW, selected by validation accuracy)**
+##### Best Model (selected by validation accuracy)
 
-    | Metric | Value |
-    |--------|------|
-    | Epoch | 9 |
-    | Train Loss | 0.4213 |
-    | Train Accuracy | 85.02% |
-    | Validation Loss | 0.8645 |
-    | Validation Accuracy | 73.72% |
+| Metric | Value |
+|--------|------|
+| Epoch | 6 |
+| Train Loss | 0.5484 |
+| Train Accuracy | 80.72% |
+| Validation Loss | 0.8244 |
+| Validation Accuracy | 72.78% |
+
+##### Analysis
+
+The validation accuracy is lower than the training accuracy, suggesting that the model may be overfitting to the training data.
 
 
-4. **Add Cross-Validation**
+#### 3. Training Improvements
 
-    Implemented stratified k-fold cross-validation to evaluate model performance on different data subsets.
+Several training strategies were applied to improve model performance:
 
-    - Optimizer: AdamW
-    - K-fold: 5
+- Early Stopping: epochs = 100, patience = 7
+- Batch Size: 32 → 64
+- Optimizer Comparison:
+    - Adam
+    - SGD
+    - AdamW
+    - SGD + Momentum
 
-    | Metric | Value |
-    |--------|------|
-    | Validation Mean Loss | 1.0119|
-    | Validation Mean Accuracy | 68.91% |
+##### Best Model (AdamW, selected by validation accuracy)
 
-    **Analysis**
+| Metric | Value |
+|--------|------|
+| Epoch | 9 |
+| Train Loss | 0.4213 |
+| Train Accuracy | 85.02% |
+| Validation Loss | 0.8645 |
+| Validation Accuracy | 73.72% |
 
-    - Since the average accuracy was used, the result is lower than the previous attempt (3.), 
-    which used the highest accuracy.
+
+#### 4. Cross-Validation
+
+Stratified k-fold cross-validation was applied to evaluate model performance across different data subsets.
+
+- Optimizer: AdamW
+- K-fold: 5
+
+##### Results
+
+| Metric | Value |
+|--------|------|
+| Validation Mean Loss | 1.0119|
+| Validation Mean Accuracy | 68.91% |
+
+##### Analysis
+
+Since the average accuracy was used, the result is lower than the previous attempt (3.),which used the highest accuracy.
 
 
-5. **Adjust Learning Rate**
+#### 5. Learning Rate Scheduling
 
-    Compare model performance using different learning rate schedulers
+Different learning rate schedulers were applied to evaluate and compare model performance.
 
-    - CosineAnnealingLR
-        - optimizer: AdamW
-        - T_max=epochs
-        - eta_min=1e-6
+- CosineAnnealingLR
+    - optimizer: AdamW
+    - T_max: epochs
+    - eta_min: 1e-6
 
-    - OneCycleLR
-        - optimizer: AdamW
-        - max_lr = 0.01
-        - steps_per_epoch=len(train_data)
-        - epochs=epochs
+- OneCycleLR
+    - optimizer: AdamW
+    - max_lr: 0.01
+    - steps_per_epoch: len(train_data)
+    - epochs: epochs
 
-    **CosineAnnealingLR Scheduler**
+##### CosineAnnealingLR Results
 
-    | Metric | Value |
-    |--------|------|
-    | Validation Mean Loss | 0.9951 |
-    | Validation Mean Accuracy | 68.70% |
+| Metric | Value |
+|--------|------|
+| Validation Mean Loss | 0.9951 |
+| Validation Mean Accuracy | 68.70% |
 
-    **OneCycleLR Scheduler**
+##### OneCycleLR Results
 
-    | Metric | Value |
-    |--------|------|
-    | Validation Mean Loss | 1.0435 |
-    | Validation Mean Accuracy | 64.55% |
+| Metric | Value |
+|--------|------|
+| Validation Mean Loss | 1.0435 |
+| Validation Mean Accuracy | 64.55% |
 
-    **Comparison with Baseline**
+##### Comparison with Baseline
 
-    Compared to the baseline model without a learning rate scheduler:
+| Metric | Value |
+|--------|------|
+| Baseline Validation Mean Accuracy | 68.91% |
+| CosineAnnealingLR Validation Mean Accuracy| 68.70% |
+| OneCycleLR Validation Mean Accuracy| 64.55% |
 
-    - Baseline Validation Accuracy: 68.91%
-    - CosineAnnealingLR: 68.70%
-    - OneCycleLR: 64.55%
+##### Analysis
 
-    Both schedulers resulted in lower performance compared to the baseline.
-    
+Both schedulers resulted in lower performance compared to the baseline.
+
+This suggests that the current learning rate is already well-tuned.
+
 ---

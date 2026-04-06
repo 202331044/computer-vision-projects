@@ -5,8 +5,7 @@ import torchvision.transforms as transforms
 import argparse
 import numpy as np
 from sklearn.model_selection import train_test_split
-
-from train_utils import train, evaluate, cross_validate
+from train import train, evaluate, cross_validate
 from utils import get_model, get_optimizer, split_train_val_data
 
 def run(model_name, epochs, batch_size, opt_name):

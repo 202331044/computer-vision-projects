@@ -2,7 +2,7 @@ import torch
 import torch.optim as optim
 import numpy as np
 from model import CNN as BaselineCNN
-from mini_tasks.task1 import CNN as Task1CNN
+from model import Task1CNN
 
 def get_model(model_name):
     if model_name == "baseline":
