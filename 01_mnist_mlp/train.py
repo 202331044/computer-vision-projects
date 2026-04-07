@@ -1,8 +1,8 @@
 import torch
 from sklearn.model_selection import StratifiedKFold
-from model import get_model, get_optimizer
+from utils import get_model, get_optimizer
 
-def train(train_data, val_data, model, loss_function, device, epochs, patience, optimizer):
+def train(train_data, val_data, model, loss_function, device, optimizer, epochs=100, patience=5):
   
   best_loss = float('Inf')
   count = 0
@@ -13,7 +13,7 @@ def train(train_data, val_data, model, loss_function, device, epochs, patience, 
 
     model.train()                 # train mode: enables dropout, batchnorm
     
-    total_loss = 0
+    train_total_loss = 0
     total = 0
     correct = 0
 
@@ -24,18 +24,18 @@ def train(train_data, val_data, model, loss_function, device, epochs, patience, 
       batch_size = labels.size(0)
 
       outputs = model(images)
+
       loss = loss_function(outputs, labels)
 
       optimizer.zero_grad()     # reset gradients
       loss.backward( )          # backpropagation
       optimizer.step()          # update parameters
 
-      total_loss += loss.item() * batch_size # item(): convert tensor scalar to float
+      train_total_loss += loss.item() * batch_size
       total += batch_size
       
       _, prediction = torch.max(outputs, 1)
       correct += (prediction == labels).sum().item()
-    
     
     val_loss, val_acc = evaluate(val_data, model, loss_function, device)
 
@@ -43,7 +43,7 @@ def train(train_data, val_data, model, loss_function, device, epochs, patience, 
     val_total_acc += val_acc
 
     print(f"epoch: {epoch + 1}")
-    print(f"Train Loss: {total_loss/total:.4f} Train Acc: {correct/total*100 :.2f}%")
+    print(f"Train Loss: {train_total_loss/total:.4f} Train Acc: {correct/total*100 :.2f}%")
     print(f"Val Loss: {val_loss:.4f} Val Acc: {val_acc:.2f}%")
     print("--------------------------")
 
@@ -85,15 +85,16 @@ def evaluate(data, model, loss_function, device):
       _, prediction = torch.max(outputs, 1)
       correct += (prediction == labels).sum().item()
 
-  eval_loss = total_loss/total
-  eval_acc = correct/total*100
+  avg_loss = total_loss/total
+  accuracy = correct/total*100
 
-  return eval_loss, eval_acc
+  return avg_loss, accuracy
 
-def cross_validate( datasets, model_name, loss_function, device, batch_size = 32, n_splits=5,
-                   epochs=100, patience=5, opt_name=None):
 
-  skf = StratifiedKFold(n_splits = n_splits, shuffle=True, random_state=42)
+def cross_validate(datasets, model_name, loss_function, device, batch_size=32, n_splits=5,
+                   epochs=100, patience=5, opt_name="Adam"):
+
+  skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
   val_total_loss = 0
   val_total_acc = 0
 
@@ -110,7 +111,7 @@ def cross_validate( datasets, model_name, loss_function, device, batch_size = 32
 
     print(f"--------fold {fold + 1}--------")
     
-    val_loss, val_acc = train(train_data, val_data, model, loss_function, device, epochs, patience, optimizer)
+    val_loss, val_acc = train(train_data, val_data, model, loss_function, device, optimizer, epochs, patience)
     val_total_loss += val_loss
     val_total_acc += val_acc
 

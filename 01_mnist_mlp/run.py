@@ -3,7 +3,7 @@ import torchvision                            # image datasets + preprocessing t
 import torchvision.transforms as transforms   # preprocessing tools
 import torch.nn as nn                         # layer definitions
 import argparse
-from model import get_model, get_optimizer
+from utils import get_model, get_optimizer
 from train import cross_validate
 
 def run(epochs, batch_size, model_name, opt_name):
