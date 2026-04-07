@@ -24,10 +24,11 @@ def get_optimizer(opt_name, model):
     else:
         raise ValueError("Unkown optimizer")
 
-def split_train_val_data(full_train_datasets, train_ratio = 0.9, seed = 42):
+def split_train_val_data(datasets, train_ratio=0.9, seed=42):
+
     train_indices = []
     val_indices = []
-    targets = np.array(full_train_datasets.targets)
+    targets = np.array(datasets.targets)
     class_numbers = np.unique(targets)
     np.random.seed(seed)
 
@@ -42,7 +43,7 @@ def split_train_val_data(full_train_datasets, train_ratio = 0.9, seed = 42):
     np.random.shuffle(train_indices)
     np.random.shuffle(val_indices)
 
-    train_datasets = torch.utils.data.Subset(full_train_datasets, train_indices)
-    val_datasets= torch.utils.data.Subset(full_train_datasets, val_indices)
+    train_datasets = torch.utils.data.Subset(datasets, train_indices)
+    val_datasets= torch.utils.data.Subset(datasets, val_indices)
 
     return train_datasets, val_datasets

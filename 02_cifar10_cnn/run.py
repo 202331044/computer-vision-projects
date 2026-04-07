@@ -25,9 +25,7 @@ def run(model_name, epochs, batch_size, opt_name):
         transform = transform
     )
 
-    #split train/val data
-    ##train_datasets, val_datasets = split_train_val_data(full_train_datasets)
-    
+    # #split train/val data
     # train_indices, val_indices = train_test_split(
     #     np.arange(len(full_train_datasets)),
     #     test_size = 0.1,
@@ -40,27 +38,27 @@ def run(model_name, epochs, batch_size, opt_name):
     # train_data = torch.utils.data.DataLoader(train_datasets, batch_size = batch_size, shuffle = True)
     # val_data = torch.utils.data.DataLoader(val_datasets, batch_size = batch_size, shuffle = False)
 
-    test_data = torch.utils.data.DataLoader(test_datasets, batch_size = batch_size, shuffle = False)
-
     # model = get_model(model_name).to(device)
-
-    loss_function = nn.CrossEntropyLoss()
     # optimizer = get_optimizer(opt_name, model)
 
+    test_data = torch.utils.data.DataLoader(test_datasets, batch_size = batch_size, shuffle = False)
+
+    loss_function = nn.CrossEntropyLoss()
     patience = 7
-    
-    # train(epochs, patience, device, train_data, val_data, model, loss_function, optimizer)
-    # evaluate(device, test_data, model, loss_function)
-    
-    cross_validate(full_train_datasets, epochs, patience, device, model_name, loss_function, opt_name,
-        n_splits=5, batch_size=64, random_state=42)
+    n_splits = 5
+
+    cross_validate(full_train_datasets, model_name, loss_function, device, batch_size,
+                n_splits, epochs, patience, opt_name)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    
     parser.add_argument("--model", type=str, default="baseline")
     parser.add_argument("--epochs", type=int, default=3)
     parser.add_argument("--batch_size", type=int, default = 32)
     parser.add_argument("--optimizer", type=str, default = "Adam")
+
     args = parser.parse_args()
 
     run(args.model, args.epochs, args.batch_size, args.optimizer)

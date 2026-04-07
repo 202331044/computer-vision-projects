@@ -36,13 +36,20 @@
 
 **Conv / Pooling output size Formula**
 
-$O = \frac{\lfloor I + 2P - K \rfloor}{S} + 1$
+$O = \lfloor \frac{I + 2P - K }{S} \rfloor + 1$
 
 - O: Output size
 - I: Input size
 - P: Padding
 - K: Kernel size
 - S: Stride
+
+**Training Best Practices**
+
+- When using k-fold cross-validation, a new model and optimizer are required for each fold.
+- `optimizer.zero_grad()` is required before backpropagation at each batch to prevent gradient accumulation.
+- Early stopping is based on validation metrics (e.g., loss or accuracy).
+- Validation is typically performed after each epoch.
 
 --- 
 ## Experiment
