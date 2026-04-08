@@ -1,6 +1,6 @@
 # 02_cifar10_cnn
 
-## Core Libraries
+## 🧰 Core Libraries
 
 ### torch
 
@@ -32,7 +32,7 @@
 
 ---
 
-## Core Concepts
+## 📚 Core Concepts
 
 **Conv / Pooling output size Formula**
 
@@ -52,7 +52,7 @@ $O = \lfloor \frac{I + 2P - K }{S} \rfloor + 1$
 - Validation is typically performed after each epoch.
 
 --- 
-## Experiment
+## 🚀 Experiment
 
 ### CIFAR10 Dataset
 

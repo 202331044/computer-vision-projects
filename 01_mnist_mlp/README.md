@@ -1,6 +1,6 @@
 # 01_mnist_mlp
 
-## Core Libraries
+## 🧰 Core Libraries
 
 ### torch
 
@@ -62,7 +62,7 @@
 
 ---
 
-## Core Concepts
+## 📚 Core Concepts
 
 Tensor
 
@@ -72,7 +72,7 @@ Tensor
 
 ---
 
-## Experiment
+## 🚀 Experiment
 
 ### MNIST Dataset
 - Image size: 28 × 28 (grayscale)
