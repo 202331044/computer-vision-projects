@@ -44,14 +44,15 @@ def train(train_data, val_data, model, loss_function, device, optimizer, epochs=
     print(f"Val Loss: {val_loss:.4f} Val Acc: {val_acc:.2f}%")
 
     #early stopping
+
+    if best_val_loss > val_loss:
+      best_val_loss = val_loss
+      best_val_acc = val_acc
+      count = 0
+    else:
+      count += 1
+
     if(is_early_stopping):
-      if best_val_loss > val_loss:
-        best_val_loss = val_loss
-        best_val_acc = val_acc
-        count = 0
-      else:
-        count += 1
-      
       if count >= patience:
         print("Early Stopping")
         print("--------------------------")
@@ -146,7 +147,7 @@ def run_cross_validate(datasets, model_name, loss_function, device, batch_size=3
       print(f"--------fold {fold + 1}--------")
 
       val_loss, val_acc = train(train_data, val_data, model, loss_function, device, optimizer,
-                          epochs, patience, is_early_stopping=True)
+                          epochs, patience, is_early_stopping=False)
       
       val_losses.append(val_loss)
       val_accs.append(val_acc)
