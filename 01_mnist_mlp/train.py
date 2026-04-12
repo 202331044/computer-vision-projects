@@ -1,19 +1,19 @@
 import torch
 from sklearn.model_selection import StratifiedKFold
 from utils import get_model, get_optimizer, make_train_val_data, load_train_val_data, set_seed
+import numpy as np
 
 def train(train_data, val_data, model, loss_function, device, optimizer, epochs=100, patience=5, is_early_stopping=False):
   
-  best_loss = float('Inf')
+  best_val_loss = float('Inf')
+  best_val_acc = 0
   count = 0
-  val_total_loss = 0
-  val_total_acc = 0
 
   for epoch in range(epochs):
 
     model.train()                 # train mode: enables dropout, batchnorm
     
-    train_total_loss = 0
+    train_sum_loss = 0
     total = 0
     correct = 0
 
@@ -31,7 +31,7 @@ def train(train_data, val_data, model, loss_function, device, optimizer, epochs=
       loss.backward( )          # backpropagation
       optimizer.step()          # update parameters
 
-      train_total_loss += loss.item() * batch_size
+      train_sum_loss += loss.item() * batch_size
       total += batch_size
       
       _, prediction = torch.max(outputs, 1)
@@ -39,19 +39,16 @@ def train(train_data, val_data, model, loss_function, device, optimizer, epochs=
     
     val_loss, val_acc = evaluate(val_data, model, loss_function, device)
 
-    val_total_loss += val_loss
-    val_total_acc += val_acc
-
     print(f"epoch: {epoch + 1}")
-    print(f"Train Loss: {train_total_loss/total:.4f} Train Acc: {correct/total*100 :.2f}%")
+    print(f"Train Loss: {train_sum_loss/total:.4f} Train Acc: {correct/total*100 :.2f}%")
     print(f"Val Loss: {val_loss:.4f} Val Acc: {val_acc:.2f}%")
-    print("--------------------------")
 
     #early stopping
     if(is_early_stopping):
-      if best_loss > val_loss:
+      if best_val_loss > val_loss:
+        best_val_loss = val_loss
+        best_val_acc = val_acc
         count = 0
-        best_loss = val_loss
       else:
         count += 1
       
@@ -60,7 +57,7 @@ def train(train_data, val_data, model, loss_function, device, optimizer, epochs=
         print("--------------------------")
         break
 
-  return val_total_loss/(epoch+1), val_total_acc/(epoch+1)
+  return best_val_loss, best_val_acc
 
 
 def evaluate(data, model, loss_function, device):
@@ -103,7 +100,7 @@ def cross_validate(datasets, model_name, loss_function, device, batch_size=32, n
   for fold, (train_idx, val_idx) in enumerate(skf.split(datasets.data, datasets.targets)):
     
     set_seed(42)
-    g = torch.generator()
+    g = torch.Generator()
     g.manual_seed(42)
 
     train_datasets = torch.utils.data.Subset(datasets, train_idx)
@@ -128,8 +125,8 @@ def run_cross_validate(datasets, model_name, loss_function, device, batch_size=3
                       n_splits=5, epochs=100, patience=5, opt_name="Adam", load_file="splits.pkl"):
     
     splits = load_train_val_data(load_file)
-    val_total_loss = 0
-    val_total_acc = 0
+    val_losses = []
+    val_accs = []
 
     for fold, (train_idx, val_idx) in enumerate(splits):
 
@@ -151,9 +148,10 @@ def run_cross_validate(datasets, model_name, loss_function, device, batch_size=3
       val_loss, val_acc = train(train_data, val_data, model, loss_function, device, optimizer,
                           epochs, patience, is_early_stopping=True)
       
+      val_losses.append(val_loss)
+      val_accs.append(val_acc)
+
       print(f"fold {fold + 1} - Val Loss: {val_loss:.4f} Val Acc: {val_acc:.2f}")
       
-      val_total_loss += val_loss
-      val_total_acc += val_acc
-
-    print(f"Val Mean Loss: {val_total_loss/(n_splits):.4f} Val Mean Acc: {val_total_acc/(n_splits):.2f}%")
+    print(f"Val Mean Loss: {np.mean(val_losses):.4f} ± {np.std(val_losses):.4f}")
+    print(f"Val Mean Acc: {np.mean(val_accs):.2f} ± {np.std(val_accs):.2f}")
