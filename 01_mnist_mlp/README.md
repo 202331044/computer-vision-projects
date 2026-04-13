@@ -138,9 +138,9 @@ Pickle
 ### Results
 
 | Metric | Value |
-|--------|------|
-| Validation Loss | 0.1088 |
-| Validation Accuracy | 96.86% |
+|--------|-------|
+| Validation Loss | 0.0849 ± 0.0039 |
+| Validation Accuracy | 97.50% ± 0.09% |
 
 > Results are averaged over 5 folds.
 
@@ -155,15 +155,15 @@ Pickle
 ##### Results
 
 | Metric | Baseline | Step 1 |
-|--------|----------------|----------------|
-| Validation Loss | 0.1088 | 0.0997 |
-| Validation Accuracy | 96.86% | 97.17% |
+|--------|----------|--------|
+| Validation Loss | 0.0849 ± 0.0039 | 0.0796 ± 0.0042 |
+| Validation Accuracy | 97.50% ± 0.09% | 97.74% ± 0.18% |
 
 > Results are averaged over 5 folds.
 
-> Improved accuracy by +0.31% and reduced validation loss.
+> Increasing model capacity caused a slight improvement in performance (loss and accuracy), but the increased standard deviation suggests lower stability across folds.
 
-> This suggests that increasing model capacity helps the model capture more complex patterns in the data.
+> This can be interpreted as a bias–variance trade-off.
 
 #### Step 2. Training Improvements
 
@@ -171,15 +171,13 @@ Pickle
 
 | Metric | Baseline | Step 1 | Step 2 |
 |--------|----------|--------|--------|
-| Validation Loss | 0.1088 | 0.0997 | 0.0996 |
-| Validation Accuracy | 96.86% | 97.17% | 97.24% |
+| Validation Loss | 0.0849 ± 0.0039 | 0.0796 ± 0.0042 | 0.0796 ± 0.0042 |
+| Validation Accuracy | 97.50% ± 0.09% | 97.74% ± 0.18% | 97.74% ± 0.18% |
+
 
 > Results are averaged over 5 folds.
 
-> Slight improvement over Step 1 (+0.07% accuracy) with a slight reduction in loss.
-
-> Early stopping had limited impact, suggesting the model was not significantly overfitting.
-
+> The results for Step 2 are identical to Step 1, suggesting that 10 epochs may already be sufficient for this setting.
 
 #### Step 3. Drop Out
 
@@ -187,13 +185,15 @@ Pickle
 
 | Metric | Baseline | Step 1 | Step 2 | Step 3 |
 |--------|----------|--------|--------|--------|
-| Validation Loss | 0.1088 | 0.0997 | 0.0996 | 0.0906 |
-| Validation Accuracy | 96.86% | 97.17% | 97.24% | 97.44% |
+| Validation Loss | 0.0849 ± 0.0039 | 0.0796 ± 0.0042 | 0.0796 ± 0.0042 | 0.0736 ± 0.0023 |
+| Validation Accuracy | 97.50% ± 0.09% | 97.74% ± 0.18% | 97.74% ± 0.18% | 97.93% ± 0.17% |
+
 
 > Results are averaged over 5 folds.
 
-> Improved performance over Step 2 (+0.20% accuracy) with a notable reduction in validation loss.
+> Dropout improved performance in both validation loss and accuracy compared to previous steps. <br>
+> It also reduced the standard deviation across folds compared to Step 1 and Step 2, while the loss variance was lower than the baseline.
 
-> Early stopping had limited impact, suggesting that the model converged early, while dropout provided stronger regularization.
+> This suggests that dropout effectively regularized the model.
 
 ---
