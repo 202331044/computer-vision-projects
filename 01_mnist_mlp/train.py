@@ -3,7 +3,7 @@ from sklearn.model_selection import StratifiedKFold
 from utils import get_model, get_optimizer, make_train_val_data, load_train_val_data, set_seed
 import numpy as np
 
-def train(train_data, val_data, model, loss_function, device, optimizer, epochs=100, patience=5, is_early_stopping=False):
+def train(train_data, val_data, model, loss_function, device, optimizer, epochs=10, patience=5, is_early_stopping=False):
   
   best_val_loss = float('Inf')
   best_val_acc = 0
@@ -42,7 +42,7 @@ def train(train_data, val_data, model, loss_function, device, optimizer, epochs=
     print(f"epoch: {epoch + 1}")
     print(f"Train Loss: {train_sum_loss/total:.4f} Train Acc: {correct/total*100 :.2f}%")
     print(f"Val Loss: {val_loss:.4f} Val Acc: {val_acc:.2f}%")
-
+    print("-------------------------")
     #early stopping
 
     if best_val_loss > val_loss:
@@ -54,8 +54,7 @@ def train(train_data, val_data, model, loss_function, device, optimizer, epochs=
 
     if(is_early_stopping):
       if count >= patience:
-        print("Early Stopping")
-        print("--------------------------")
+        print("-----------Early Stopping-----------")
         break
 
   return best_val_loss, best_val_acc
@@ -92,7 +91,7 @@ def evaluate(data, model, loss_function, device):
 
 
 def cross_validate(datasets, model_name, loss_function, device, batch_size=32, n_splits=5,
-                   epochs=100, patience=5, opt_name="Adam"):
+                   epochs=10, patience=5, opt_name="Adam", is_early_stopping=False):
 
   skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
   val_total_loss = 0
@@ -113,9 +112,10 @@ def cross_validate(datasets, model_name, loss_function, device, batch_size=32, n
     model = get_model(model_name).to(device)
     optimizer = get_optimizer(opt_name, model)
 
-    print(f"--------fold {fold + 1}--------")
+    print(f"-----------fold {fold + 1}-----------")
     
-    val_loss, val_acc = train(train_data, val_data, model, loss_function, device, optimizer, epochs, patience)
+    val_loss, val_acc = train(train_data, val_data, model, loss_function, device, optimizer,
+                          epochs, patience, is_early_stopping=is_early_stopping)
     val_total_loss += val_loss
     val_total_acc += val_acc
 
@@ -123,7 +123,8 @@ def cross_validate(datasets, model_name, loss_function, device, batch_size=32, n
 
 
 def run_cross_validate(datasets, model_name, loss_function, device, batch_size=32, 
-                      n_splits=5, epochs=100, patience=5, opt_name="Adam", load_file="splits.pkl"):
+                      n_splits=5, epochs=10, patience=5, opt_name="Adam", 
+                      is_early_stopping=False, load_file="splits.pkl"):
     
     splits = load_train_val_data(load_file)
     val_losses = []
@@ -138,7 +139,7 @@ def run_cross_validate(datasets, model_name, loss_function, device, batch_size=3
       train_datasets = torch.utils.data.Subset(datasets, train_idx)
       val_datasets = torch.utils.data.Subset(datasets, val_idx)
 
-      train_data = torch.utils.data.DataLoader(train_datasets, batch_size=batch_size, shuffle=True)
+      train_data = torch.utils.data.DataLoader(train_datasets, batch_size=batch_size, shuffle=True, generator=g)
       val_data = torch.utils.data.DataLoader(val_datasets, batch_size=batch_size, shuffle=False)
 
       model = get_model(model_name).to(device)
@@ -147,12 +148,12 @@ def run_cross_validate(datasets, model_name, loss_function, device, batch_size=3
       print(f"--------fold {fold + 1}--------")
 
       val_loss, val_acc = train(train_data, val_data, model, loss_function, device, optimizer,
-                          epochs, patience, is_early_stopping=False)
+                          epochs, patience, is_early_stopping=is_early_stopping)
       
       val_losses.append(val_loss)
       val_accs.append(val_acc)
 
-      print(f"fold {fold + 1} - Val Loss: {val_loss:.4f} Val Acc: {val_acc:.2f}")
+      print(f"fold {fold + 1} - Val Loss: {val_loss:.4f} Val Acc: {val_acc:.2f}%")
       
     print(f"Val Mean Loss: {np.mean(val_losses):.4f} ± {np.std(val_losses):.4f}")
-    print(f"Val Mean Acc: {np.mean(val_accs):.2f} ± {np.std(val_accs):.2f}")
+    print(f"Val Mean Acc: {np.mean(val_accs):.2f}% ± {np.std(val_accs):.2f}%")
