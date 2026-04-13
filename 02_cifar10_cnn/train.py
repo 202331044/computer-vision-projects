@@ -4,7 +4,7 @@ from utils import get_model, get_optimizer, make_train_val_data, load_train_val_
 from torch.optim.lr_scheduler import StepLR, CosineAnnealingLR, OneCycleLR
 import numpy as np
 
-def train(train_data, val_data, model, loss_function, device, optimizer, epochs=100, patience=7, is_early_stopping=False):
+def train(train_data, val_data, model, loss_function, device, optimizer, epochs=10, patience=5, is_early_stopping=False):
     
     best_val_loss = float('inf')
     best_val_acc = 0
@@ -18,7 +18,7 @@ def train(train_data, val_data, model, loss_function, device, optimizer, epochs=
         
         model.train()
         
-        train_total_loss = 0
+        train_sum_loss = 0
         total = 0
         correct = 0
 
@@ -41,7 +41,7 @@ def train(train_data, val_data, model, loss_function, device, optimizer, epochs=
             total += batch_size
 
             #loss
-            train_total_loss += loss.item() * batch_size
+            train_sum_loss += loss.item() * batch_size
             
             #accuracy
             _, prediction = torch.max(outputs, 1)
@@ -52,7 +52,7 @@ def train(train_data, val_data, model, loss_function, device, optimizer, epochs=
         #scheduler.step() #stepLR, CosineAnnealingLR
     
         print(f"Epoch: {epoch + 1}")
-        print(f"Train Loss: {train_total_loss/total:.4f} Train Acc: {correct/total * 100:.2f}%")
+        print(f"Train Loss: {train_sum_loss/total:.4f} Train Acc: {correct/total * 100:.2f}%")
         print(f"Val Loss: {val_loss:.4f} Val Acc: {val_acc:.2f}%")
 
 
@@ -104,7 +104,7 @@ def evaluate(data, model, loss_function, device):
 
 
 def cross_validate(datasets, model_name, loss_function, device, batch_size=32,
-                n_splits=5, epochs=100, patience=7, opt_name="Adam"):
+                n_splits=5, epochs=10, patience=5, opt_name="Adam", is_early_stopping=False):
 
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
     val_losses = []
@@ -127,17 +127,18 @@ def cross_validate(datasets, model_name, loss_function, device, batch_size=32,
 
         print(f"-------fold {fold+1}-------")
         
-        val_loss, val_acc = train(train_data, val_data, model, loss_function, device, optimizer, epochs, patience, is_early_stopping=False)
+        val_loss, val_acc = train(train_data, val_data, model, loss_function, device, optimizer, epochs, patience, is_early_stopping=is_early_stopping)
         
         val_losses.append(val_loss)
         val_accs.append(val_acc)
 
     print(f"Val Mean Loss: {np.mean(val_losses):.4f} ± {np.std(val_losses):.4f}")
-    print(f"Val Mean Acc: {np.mean(val_accs):.2f} ± {np.std(val_accs):.2f}")
+    print(f"Val Mean Acc: {np.mean(val_accs):.2f}% ± {np.std(val_accs):.2f}%")
 
 
 def run_cross_validate(datasets, model_name, loss_function, device, batch_size=32, 
-                      n_splits=5, epochs=100, patience=7, opt_name="Adam", load_file="splits.pkl"):
+                      n_splits=5, epochs=10, patience=5, opt_name="Adam", 
+                      is_early_stopping=False, load_file="splits.pkl"):
     
     splits = load_train_val_data(load_file)
     val_losses = []
@@ -161,11 +162,11 @@ def run_cross_validate(datasets, model_name, loss_function, device, batch_size=3
         print(f"--------fold {fold + 1}--------")
 
         val_loss, val_acc = train(train_data, val_data, model, loss_function, device, optimizer,
-                            epochs, patience, is_early_stopping=False)
+                            epochs, patience, is_early_stopping=is_early_stopping)
         val_losses.append(val_loss)
         val_accs.append(val_acc)
 
-        print(f"fold {fold + 1} - Val Loss: {val_loss:.4f} Val Acc: {val_acc:.2f}")
+        print(f"fold {fold + 1} - Val Loss: {val_loss:.4f} Val Acc: {val_acc:.2f}%")
 
     print(f"Val Mean Loss: {np.mean(val_losses):.4f} ± {np.std(val_losses):.4f}")
-    print(f"Val Mean Acc: {np.mean(val_accs):.2f} ± {np.std(val_accs):.2f}")
+    print(f"Val Mean Acc: {np.mean(val_accs):.2f}% ± {np.std(val_accs):.2f}%")
