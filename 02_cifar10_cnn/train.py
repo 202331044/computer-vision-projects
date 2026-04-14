@@ -54,7 +54,7 @@ def train(train_data, val_data, model, loss_function, device, optimizer, epochs=
         print(f"Epoch: {epoch + 1}")
         print(f"Train Loss: {train_sum_loss/total:.4f} Train Acc: {correct/total * 100:.2f}%")
         print(f"Val Loss: {val_loss:.4f} Val Acc: {val_acc:.2f}%")
-
+        print("-------------------------")
 
         if best_val_loss > val_loss:
             best_val_loss = val_loss
@@ -66,7 +66,7 @@ def train(train_data, val_data, model, loss_function, device, optimizer, epochs=
 
         if(is_early_stopping):
             if count >= patience:
-                print("Early Stopping\n")
+                print("-----------Early Stopping-----------")
                 break
 
     return best_val_loss, best_val_acc
@@ -132,6 +132,9 @@ def cross_validate(datasets, model_name, loss_function, device, batch_size=32,
         val_losses.append(val_loss)
         val_accs.append(val_acc)
 
+        print(f"fold {fold + 1} - Val Loss: {val_loss:.4f} Val Acc: {val_acc:.2f}%")
+
+    print("-------------------------")    
     print(f"Val Mean Loss: {np.mean(val_losses):.4f} ± {np.std(val_losses):.4f}")
     print(f"Val Mean Acc: {np.mean(val_accs):.2f}% ± {np.std(val_accs):.2f}%")
 
@@ -168,5 +171,6 @@ def run_cross_validate(datasets, model_name, loss_function, device, batch_size=3
 
         print(f"fold {fold + 1} - Val Loss: {val_loss:.4f} Val Acc: {val_acc:.2f}%")
 
+    print("-------------------------")
     print(f"Val Mean Loss: {np.mean(val_losses):.4f} ± {np.std(val_losses):.4f}")
     print(f"Val Mean Acc: {np.mean(val_accs):.2f}% ± {np.std(val_accs):.2f}%")
