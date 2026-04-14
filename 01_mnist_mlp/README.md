@@ -159,13 +159,11 @@ Pickle
 | Validation Loss | 0.0849 ± 0.0039 | 0.0796 ± 0.0042 |
 | Validation Accuracy | 97.50% ± 0.09% | 97.74% ± 0.18% |
 
-> Results are averaged over 5 folds.
+- Results are averaged over 5 folds.
+- Increasing model capacity caused a slight improvement in performance (loss and accuracy), but the increased standard deviation suggests lower stability across folds.
+- This can be interpreted as a bias–variance trade-off.
 
-> Increasing model capacity caused a slight improvement in performance (loss and accuracy), but the increased standard deviation suggests lower stability across folds.
-
-> This can be interpreted as a bias–variance trade-off.
-
-#### Step 2. Training Improvements
+#### Step 2. Early Stopping
 
 - Add early stopping (Epochs: 10 → 100, patience=5)
 
@@ -177,11 +175,12 @@ Pickle
 
 > Results are averaged over 5 folds.
 
-> The results for Step 2 are identical to Step 1, suggesting that 10 epochs may already be sufficient for this setting.
+- The results for Step 2 are identical to Step 1, suggesting that 10 epochs may already be sufficient for this setting.
 
-#### Step 3. Drop Out
+#### Step 3. Dropout
 
 - Add dropout (p=0.3)
+- patience = 5
 
 | Metric | Baseline | Step 1 | Step 2 | Step 3 |
 |--------|----------|--------|--------|--------|
@@ -191,9 +190,8 @@ Pickle
 
 > Results are averaged over 5 folds.
 
-> Dropout improved performance in both validation loss and accuracy compared to previous steps. <br>
-> It also reduced the standard deviation across folds compared to Step 1 and Step 2, while the loss variance was lower than the baseline.
-
-> This suggests that dropout effectively regularized the model.
+- Dropout improved performance in both validation loss and accuracy compared to previous steps.
+- It also reduced the standard deviation across folds compared to Step 1 and Step 2, while the loss variance was lower than the baseline.
+- This suggests that dropout effectively regularized the model.
 
 ---
