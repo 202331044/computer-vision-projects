@@ -94,8 +94,8 @@ def cross_validate(datasets, model_name, loss_function, device, batch_size=32, n
                    epochs=10, patience=5, opt_name="Adam", is_early_stopping=False):
 
   skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
-  val_total_loss = 0
-  val_total_acc = 0
+  val_losses = []
+  val_accs = []
 
   for fold, (train_idx, val_idx) in enumerate(skf.split(datasets.data, datasets.targets)):
     
@@ -116,10 +116,13 @@ def cross_validate(datasets, model_name, loss_function, device, batch_size=32, n
     
     val_loss, val_acc = train(train_data, val_data, model, loss_function, device, optimizer,
                           epochs, patience, is_early_stopping=is_early_stopping)
-    val_total_loss += val_loss
-    val_total_acc += val_acc
-
-  print(f"Val Mean Loss: {val_total_loss/(n_splits):.4f} Val Mean Acc: {val_total_acc/(n_splits):.2f}%")
+    val_losses.append(val_loss)
+    val_accs.append(val_acc)
+    print(f"fold {fold + 1} - Val Loss: {val_loss:.4f} Val Acc: {val_acc:.2f}%")
+    
+  print("-------------------------")
+  print(f"Val Mean Loss: {np.mean(val_losses):.4f} ± {np.std(val_losses):.4f}")
+  print(f"Val Mean Acc: {np.mean(val_accs):.2f}% ± {np.std(val_accs):.2f}%")
 
 
 def run_cross_validate(datasets, model_name, loss_function, device, batch_size=32, 
@@ -154,6 +157,7 @@ def run_cross_validate(datasets, model_name, loss_function, device, batch_size=3
       val_accs.append(val_acc)
 
       print(f"fold {fold + 1} - Val Loss: {val_loss:.4f} Val Acc: {val_acc:.2f}%")
-      
+    
+    print("-------------------------")
     print(f"Val Mean Loss: {np.mean(val_losses):.4f} ± {np.std(val_losses):.4f}")
     print(f"Val Mean Acc: {np.mean(val_accs):.2f}% ± {np.std(val_accs):.2f}%")
