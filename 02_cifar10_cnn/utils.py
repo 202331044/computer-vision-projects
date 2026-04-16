@@ -2,7 +2,7 @@ import torch
 import torch.optim as optim
 import numpy as np
 from model import CNN as BaselineCNN
-from model import Task1CNN
+from model import Task1CNN, Task2CNN, Task3CNN, Task4CNN, Task5CNN
 import pickle
 from sklearn.model_selection import StratifiedKFold
 import random
@@ -12,6 +12,14 @@ def get_model(model_name):
         return BaselineCNN()
     elif model_name == "task1":
         return Task1CNN()
+    elif model_name == "task2":
+        return Task2CNN()
+    elif model_name == 'task3':
+        return Task3CNN()
+    elif model_name == 'task4':
+        return Task4CNN()
+    elif model_name == 'task5':
+        return Task5CNN()
     else:
         raise ValueError("Unkown model")
 
