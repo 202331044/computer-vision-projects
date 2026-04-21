@@ -1,4 +1,4 @@
-# 01_mnist_mlp
+# 01 MNIST MLP: Image Classification
 
 ## 🧰 Core Libraries
 
@@ -146,7 +146,7 @@ Pickle
 
 ---
 
-### Mini Task: Model Performance Improvement
+### Model Performance Improvement
 
 #### Step 1. Hidden Layer Size Improvement
 
