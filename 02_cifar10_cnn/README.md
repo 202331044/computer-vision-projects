@@ -118,20 +118,25 @@ $O = \lfloor \frac{I + 2P - K }{S} \rfloor + 1$
 
 To improve CNN performance on CIFAR-10 classification, the following experiments were conducted.
 
-### 1. Training Stability
+#### 1. Training Stability
 - Early Stopping
 - Patience tuning
 
-### 2. Regularization
+#### 2. Regularization
 - Dropout
-- Batch Normalization
 
-### 3. Architecture Changes
+#### 3. Architecture Changes
 - Additional hidden layers
 - Conv → Conv → Pool restructuring
+- Residual connections (skip connections)
 
-### 4. Pooling Strategies
+#### 4. Pooling Strategies
 - Adaptive Max Pooling → Adaptive Avg Pooling
 - Global Average Pooling
+- Max Pooling → Stride-based Downsampling
+
+#### 5. Optimization & Stabilization
+- Batch Normalization
+- Conv bias removal (bias = False)
 
 ---
