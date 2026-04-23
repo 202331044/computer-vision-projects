@@ -189,3 +189,37 @@ Step 4: No performance change compared to step 3.
 - This change resulted in decreased validation performance and increased variance compared to Step 9.
 
 - This can be explained by the loss of spatial information caused by global average pooling, which compresses each feature map into a single value. Furthermore, the reduced dimensionality leads to a smaller fully connected layer, decreasing model capacity and contributing to the performance drop.
+
+## Step 11. Residual Block: With vs Without Skip Connection
+
+| Metric | Step 9 | Step 10 | Step 11 (No Skip) | Step 11 ( Skip ) |
+|--------|--------|---------|-------------------|------------------|
+| Validation Loss | 0.5741 ± 0.0121 | 0.6680 ± 0.0482 | 0.5489 ± 0.0139 | 0.5396 ± 0.0216 |
+| Validation Accuracy | 80.82% ± 0.47% | 76.96% ± 2.14% | 82.00% ± 0.88% | 82.86% ± 0.97% |
+
+> Results are averaged over 5 folds.
+
+- Applying a residual block resulted in better performance in both validation loss and accuracy compared to the previous best model (Step 9). However, the standard deviation increased, indicating reduced stability.
+
+- Notably, even without the skip connection, the residual block achieved better performance than Step 9. This suggests that increased network depth may have improved model capacity and feature extraction capability.
+
+- When the skip connection is enabled, the input is directly added to the output, which facilitates gradient flow and makes optimization easier. This leads to more efficient convergence and the best overall performance.
+
+- The increased standard deviation is mainly due to higher model capacity, which increases sensitivity to initialization and data variation. Additionally, improved optimization flexibility may lead to convergence to different local minima, increasing variability across runs.
+
+### Step 12. Residual Block: No Conv Bias
+
+| Metric | Step 11 (No Skip) | Step 11 ( Skip ) | Step 12 (No Skip) | Step 12 ( Skip ) |
+|--------|-------------------|------------------|-------------------|------------------|
+| Validation Loss | 0.5489 ± 0.0139 | 0.5396 ± 0.0216 | 0.5371 ± 0.0135 | 0.5341 ± 0.0217 |
+| Validation Accuracy | 82.00% ± 0.88% | 82.86% ± 0.97% | 82.49% ± 0.76% | 81.94% ± 0.93% |
+
+> Results are averaged over 5 folds.
+
+- The bias term of the convolution layers within the residual block was removed. When Batch Normalization is applied, the bias becomes largely redundant, as its effect is absorbed by the shift parameter (β) of the BatchNorm layer.
+
+- As a result, the overall performance remained almost unchanged. The validation loss slightly decreased, while the accuracy showed minor variations (increasing in the no-skip case and decreasing in the skip case). The standard deviation also remained similar, indicating no significant change in stability.
+
+- These small differences may be due to changes in training dynamics. Specifically, removing the bias can slightly alter the feature distribution before Batch Normalization, leading to minor variations in performance.
+
+---
