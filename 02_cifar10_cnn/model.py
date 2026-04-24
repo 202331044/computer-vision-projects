@@ -22,6 +22,39 @@ class CNN(nn.Module):
         return x
 
 
+class Residual(nn.Module):
+    def __init__(self, in_ch, out_ch, stride = 1, use_residual=False):
+        super().__init__()
+
+        self.use_residual = use_residual
+
+        self.conv1 = nn.Conv2d(in_ch, out_ch, 3, stride = stride, padding = 1, bias = False)
+        self.conv2 = nn.Conv2d(out_ch, out_ch, 3, padding = 1, bias = False)
+
+        self.bn1 = nn.BatchNorm2d(out_ch)
+        self.bn2 = nn.BatchNorm2d(out_ch)
+
+        self.relu = nn.ReLU()
+        self.skip = nn.Identity()
+
+        if stride != 1 or in_ch != out_ch:
+            self.skip = nn.Sequential(
+                nn.Conv2d(in_ch, out_ch, 1, stride = stride, padding = 0, bias = False),
+                nn.BatchNorm2d(out_ch)
+            )
+    
+    def forward(self, x):
+        identity = self.skip(x)
+        out = self.relu(self.bn1(self.conv1(x)))
+        out = self.bn2(self.conv2(out))
+
+        if self.use_residual:
+            out = out + identity
+        
+        out = self.relu(out)
+
+        return out
+
 class Task1CNN(nn.Module):
     def __init__(self):
         super().__init__()
@@ -239,39 +272,6 @@ class Task7CNN(nn.Module):
         x = self.fc2(x)
 
         return x
-
-class Residual(nn.Module):
-    def __init__(self, in_ch, out_ch, stride = 1, use_residual=False):
-        super().__init__()
-
-        self.use_residual = use_residual
-
-        self.conv1 = nn.Conv2d(in_ch, out_ch, 3, stride = stride, padding = 1, bias = False)
-        self.conv2 = nn.Conv2d(out_ch, out_ch, 3, padding = 1, bias = False)
-
-        self.bn1 = nn.BatchNorm2d(out_ch)
-        self.bn2 = nn.BatchNorm2d(out_ch)
-
-        self.relu = nn.ReLU()
-        self.skip = nn.Identity()
-
-        if stride != 1 or in_ch != out_ch:
-            self.skip = nn.Sequential(
-                nn.Conv2d(in_ch, out_ch, 1, stride = stride, padding = 0, bias = False),
-                nn.BatchNorm2d(out_ch)
-            )
-    
-    def forward(self, x):
-        identity = self.skip(x)
-        out = self.relu(self.bn1(self.conv1(x)))
-        out = self.bn2(self.conv2(out))
-
-        if self.use_residual:
-            out = out + identity
-        
-        out = self.relu(out)
-
-        return out
 
 class Task8CNN(nn.Module):
     def __init__(self, use_residual=False):

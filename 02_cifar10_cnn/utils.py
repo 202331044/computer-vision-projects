@@ -1,37 +1,36 @@
 import torch
 import torch.optim as optim
 import numpy as np
-from model import CNN as BaselineCNN
-from model import Task1CNN, Task2CNN, Task3CNN, Task4CNN, Task5CNN, Task6CNN, Task7CNN, Task8CNN, Task9CNN
+import model as m
 import pickle
 from sklearn.model_selection import StratifiedKFold
 import random
 
 def get_model(model_name):
     if model_name == "baseline":
-        return BaselineCNN()
+        return m.CNN()
     elif model_name == "task1":
-        return Task1CNN()
+        return m.Task1CNN()
     elif model_name == "task2":
-        return Task2CNN()
+        return m.Task2CNN()
     elif model_name == 'task3':
-        return Task3CNN()
+        return m.Task3CNN()
     elif model_name == 'task4':
-        return Task4CNN()
+        return m.Task4CNN()
     elif model_name == 'task5':
-        return Task5CNN()
+        return m.Task5CNN()
     elif model_name == 'task6':
-        return Task6CNN()
+        return m.Task6CNN()
     elif model_name == 'task7':
-        return Task7CNN()
+        return m.Task7CNN()
     elif model_name == 'task8_1':
-        return Task8CNN(use_residual=False)
+        return m.Task8CNN(use_residual=False)
     elif model_name == 'task8_2':
-        return Task8CNN(use_residual=True)
+        return m.Task8CNN(use_residual=True)
     elif model_name == 'task9_1':
-        return Task9CNN(use_residual=False)
+        return m.Task9CNN(use_residual=False)
     elif model_name == 'task9_2':
-        return Task9CNN(use_residual=True)
+        return m.Task9CNN(use_residual=True) 
     else:
         raise ValueError("Unkown model")
 

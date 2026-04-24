@@ -1,6 +1,6 @@
 import torch
 from sklearn.model_selection import KFold, StratifiedKFold
-from utils import get_model, get_optimizer, make_train_val_data, load_train_val_data, set_seed
+import utils as u
 from torch.optim.lr_scheduler import StepLR, CosineAnnealingLR, OneCycleLR
 import numpy as np
 
@@ -112,12 +112,12 @@ def cross_validate(datasets, model_name, loss_function, device, batch_size=32,
 
     for fold, (train_indices, val_indices) in enumerate(skf.split(datasets.data, datasets.targets)):
         
-        set_seed(42)
+        u.set_seed(42)
         g = torch.Generator()
         g.manual_seed(42)
 
-        model = get_model(model_name).to(device)
-        optimizer = get_optimizer(opt_name, model)
+        model = u.get_model(model_name).to(device)
+        optimizer = u.get_optimizer(opt_name, model)
 
         train_datasets = torch.utils.data.Subset(datasets, train_indices)
         val_datasets = torch.utils.data.Subset(datasets, val_indices)
@@ -143,13 +143,13 @@ def run_cross_validate(datasets, model_name, loss_function, device, batch_size=3
                       n_splits=5, epochs=10, patience=5, opt_name="Adam", 
                       is_early_stopping=False, load_file="splits.pkl"):
     
-    splits = load_train_val_data(load_file)
+    splits = u.load_train_val_data(load_file)
     val_losses = []
     val_accs = []
 
     for fold, (train_idx, val_idx) in enumerate(splits):
 
-        set_seed(42)
+        u.set_seed(42)
         g = torch.Generator()
         g.manual_seed(42)
 
@@ -159,8 +159,8 @@ def run_cross_validate(datasets, model_name, loss_function, device, batch_size=3
         train_data = torch.utils.data.DataLoader(train_datasets, batch_size=batch_size, shuffle=True, generator=g)
         val_data = torch.utils.data.DataLoader(val_datasets, batch_size=batch_size, shuffle=False)
 
-        model = get_model(model_name).to(device)
-        optimizer = get_optimizer(opt_name, model)
+        model = u.get_model(model_name).to(device)
+        optimizer = u.get_optimizer(opt_name, model)
 
         print(f"--------fold {fold + 1}--------")
 

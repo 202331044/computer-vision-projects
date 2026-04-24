@@ -6,11 +6,11 @@ import argparse
 import numpy as np
 from sklearn.model_selection import train_test_split
 from train import train, evaluate, cross_validate, run_cross_validate
-from utils import get_model, get_optimizer, split_train_val_data, make_train_val_data, set_seed
+import utils as u
 
 def run(model_name, epochs, batch_size, opt_name, is_early_stopping, patience):
 
-    set_seed(42)
+    u.set_seed(42)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5),(0.5, 0.5, 0.5))])
@@ -41,8 +41,8 @@ def run(model_name, epochs, batch_size, opt_name, is_early_stopping, patience):
     # train_data = torch.utils.data.DataLoader(train_datasets, batch_size = batch_size, shuffle = True)
     # val_data = torch.utils.data.DataLoader(val_datasets, batch_size = batch_size, shuffle = False)
 
-    # model = get_model(model_name).to(device)
-    # optimizer = get_optimizer(opt_name, model)
+    # model = u.get_model(model_name).to(device)
+    # optimizer = u.get_optimizer(opt_name, model)
 
     #test_data = torch.utils.data.DataLoader(test_datasets, batch_size = batch_size, shuffle = False)
 
