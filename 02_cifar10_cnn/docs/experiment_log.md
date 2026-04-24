@@ -222,4 +222,19 @@ Step 4: No performance change compared to step 3.
 
 - These small differences may be due to changes in training dynamics. Specifically, removing the bias can slightly alter the feature distribution before Batch Normalization, leading to minor variations in performance.
 
+### Step 13. Stride-Based Downsampling without Pooling
+
+| Metric | Step 12 (No Skip) | Step 12 ( Skip ) | Step 13 (No Skip) | Step 13 ( Skip) |
+|--------|-------------------|------------------|-------------------|-----------------|
+| Validation Loss | 0.5371 ± 0.0135 | 0.5341 ± 0.0217 | 0.6519 ± 0.0083 | 0.6833 ± 0.0169 |
+| Validation Accuracy | 82.49% ± 0.76% | 81.94% ± 0.93% | 77.86% ± 0.60% | 76.75% ± 1.02% |
+
+> Results are averaged over 5 folds.
+
+- Max pooling was replaced with stride-based downsampling to enable learnable feature compression, but this led to lower performance than Step 12 in both skip and no-skip settings.
+
+- Although both approaches reduce spatial resolution, they differ in how information is preserved: max pooling retains strong local activations through a fixed operation, introducing a strong inductive bias, whereas stride-based downsampling relies on learned filters, offering greater flexibility but not guaranteeing preservation of strong features.
+
+- Interestingly, Step 13 exhibits reduced variance across folds (lower standard deviation), likely due to more uniform feature aggregation in stride-based convolution, which reduces reliance on highly activated local responses. However, this comes at the cost of reduced average performance, suggesting more stable but less expressive representations.
+
 ---
