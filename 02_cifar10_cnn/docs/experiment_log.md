@@ -192,8 +192,8 @@ Step 4: No performance change compared to step 3.
 
 ## Step 11. Residual Block: With vs Without Skip Connection
 
-| Metric | Step 9 | Step 10 | Step 11 (No Skip) | Step 11 ( Skip ) |
-|--------|--------|---------|-------------------|------------------|
+| Metric | Step 9 | Step 10 | Step 11 (No Skip) | Step 11 (Skip) |
+|--------|--------|---------|-------------------|----------------|
 | Validation Loss | 0.5741 ± 0.0121 | 0.6680 ± 0.0482 | 0.5489 ± 0.0139 | 0.5396 ± 0.0216 |
 | Validation Accuracy | 80.82% ± 0.47% | 76.96% ± 2.14% | 82.00% ± 0.88% | 82.86% ± 0.97% |
 
@@ -209,8 +209,8 @@ Step 4: No performance change compared to step 3.
 
 ### Step 12. Residual Block: No Conv Bias
 
-| Metric | Step 11 (No Skip) | Step 11 ( Skip ) | Step 12 (No Skip) | Step 12 ( Skip ) |
-|--------|-------------------|------------------|-------------------|------------------|
+| Metric | Step 11 (No Skip) | Step 11 (Skip) | Step 12 (No Skip) | Step 12 (Skip) |
+|--------|-------------------|----------------|-------------------|----------------|
 | Validation Loss | 0.5489 ± 0.0139 | 0.5396 ± 0.0216 | 0.5371 ± 0.0135 | 0.5341 ± 0.0217 |
 | Validation Accuracy | 82.00% ± 0.88% | 82.86% ± 0.97% | 82.49% ± 0.76% | 81.94% ± 0.93% |
 
@@ -224,8 +224,8 @@ Step 4: No performance change compared to step 3.
 
 ### Step 13. Stride-Based Downsampling without Pooling
 
-| Metric | Step 12 (No Skip) | Step 12 ( Skip ) | Step 13 (No Skip) | Step 13 ( Skip) |
-|--------|-------------------|------------------|-------------------|-----------------|
+| Metric | Step 12 (No Skip) | Step 12 (Skip) | Step 13 (No Skip) | Step 13 (Skip) |
+|--------|-------------------|----------------|-------------------|----------------|
 | Validation Loss | 0.5371 ± 0.0135 | 0.5341 ± 0.0217 | 0.6519 ± 0.0083 | 0.6833 ± 0.0169 |
 | Validation Accuracy | 82.49% ± 0.76% | 81.94% ± 0.93% | 77.86% ± 0.60% | 76.75% ± 1.02% |
 
@@ -236,5 +236,26 @@ Step 4: No performance change compared to step 3.
 - Although both approaches reduce spatial resolution, they differ in how information is preserved: max pooling retains strong local activations through a fixed operation, introducing a strong inductive bias, whereas stride-based downsampling relies on learned filters, offering greater flexibility but not guaranteeing preservation of strong features.
 
 - Interestingly, Step 13 exhibits reduced variance across folds (lower standard deviation), likely due to more uniform feature aggregation in stride-based convolution, which reduces reliance on highly activated local responses. However, this comes at the cost of reduced average performance, suggesting more stable but less expressive representations.
+
+### Step 14. Double Residual Blocks per Stage
+
+- Previous:
+[Residual Block ×2] → Pool → [Residual Block ×2] → Pool
+
+- Updated:
+[Residual Block ×4] → Pool → [Residual Block ×4] → Pool
+
+| Metric | Step 12 (No Skip) | Step 12 (Skip) | Step 14 (No Skip) | Step 14 (Skip) |
+|--------|-------------------|----------------|-------------------|----------------|
+| Validation Loss | 0.5371 ± 0.0135 | 0.5341 ± 0.0217 | 0.5918 ± 0.0355 | 0.5107 ± 0.0130 |
+| Validation Accuracy | 82.49% ± 0.76% | 81.94% ± 0.93% | 80.20% ± 1.44% | 83.57% ± 0.77% |
+
+- In Step 12, skip connections did not improve performance, suggesting the network was too shallow to benefit from them.
+
+- In Step 14, increasing the depth by stacking more residual blocks led to the best performance with skip connections. The deeper network enables more expressive high-level feature extraction. Skip connections further enhance this by preserving input information through identity mappings, improving gradient flow and preventing feature degradation, allowing both low- and high-level features to be effectively utilized.
+
+- In terms of stability, the model without skip connections showed increased standard deviation (e.g., accuracy std 1.44%) as depth increased, whereas the model with skip connections maintained a low std (0.77%), similar to Step 12.
+
+- Overall, deeper networks improve performance through richer feature extraction, while skip connections amplify this effect and ensure stable training.
 
 ---

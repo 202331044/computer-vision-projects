@@ -30,7 +30,11 @@ def get_model(model_name):
     elif model_name == 'task9_1':
         return m.Task9CNN(use_residual=False)
     elif model_name == 'task9_2':
-        return m.Task9CNN(use_residual=True) 
+        return m.Task9CNN(use_residual=True)
+    elif model_name == 'task10_1':
+        return m.Task10CNN(use_residual=False)
+    elif model_name == 'task10_2':
+        return m.Task10CNN(use_residual=True) 
     else:
         raise ValueError("Unkown model")
 

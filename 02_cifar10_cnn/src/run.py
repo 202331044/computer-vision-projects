@@ -7,6 +7,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from train import train, evaluate, cross_validate, run_cross_validate
 import utils as u
+from pathlib import Path
 
 def run(model_name, epochs, batch_size, opt_name, is_early_stopping, patience):
 
@@ -49,9 +50,12 @@ def run(model_name, epochs, batch_size, opt_name, is_early_stopping, patience):
     loss_function = nn.CrossEntropyLoss()
     n_splits = 5
 
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    load_data_path = BASE_DIR / "data" / "splits.pkl"
+
     run_cross_validate(full_train_datasets, model_name, loss_function, device, batch_size=batch_size,
                     n_splits=n_splits, epochs=epochs, patience=patience, opt_name=opt_name,
-                     is_early_stopping=is_early_stopping,  load_file='splits.pkl')
+                     is_early_stopping=is_early_stopping,  load_file=load_data_path)
 
 
 if __name__ == "__main__":
