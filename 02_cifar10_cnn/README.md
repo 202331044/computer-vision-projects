@@ -129,6 +129,7 @@ To improve CNN performance on CIFAR-10 classification, the following experiments
 - Additional hidden layers
 - Conv → Conv → Pool restructuring
 - Residual connections (skip connections)
+- Double residual blocks per stage
 
 #### 4. Pooling Strategies
 - Adaptive Max Pooling → Adaptive Avg Pooling
@@ -138,5 +139,37 @@ To improve CNN performance on CIFAR-10 classification, the following experiments
 #### 5. Optimization & Stabilization
 - Batch Normalization
 - Conv bias removal (bias = False)
+
+### Best Model
+
+#### Architecture
+
+| Stage     | Layer / Block | Output Shape   | Details                        |
+|-----------|---------------|----------------|--------------------------------|
+| Input     | -             | (3, 32, 32)    | CIFAR-10 image                 |
+| Stage 1   | Residual ×2   | (16, 32, 32)   | 3 → 16 channels                |
+| Stage 2   | Residual ×2   | (32, 32, 32)   | 16 → 32 channels               |
+| Pool      | MaxPool       | (32, 16, 16)   | 2×2 downsampling               |
+| Stage 3   | Residual ×2   | (64, 16, 16)   | 32 → 64 channels               |
+| Stage 4   | Residual ×2   | (128, 16, 16)  | 64 → 128 channels              |
+| Pool      | MaxPool       | (128, 8, 8)    | 2×2 downsampling               |
+| GAP       | AdaptiveAvg   | (128, 1, 1)    | Global feature aggregation     |
+| Flatten   | -             | (128)          |                                |
+| FC1       | Linear        | (128)          | ReLU                           |
+| FC2       | Linear        | (10)           | CIFAR-10 classes               |
+
+#### Performance
+
+| Metric | Value |
+|--------|-------|
+| Validation Loss | 0.5107 ± 0.0130 |
+| Validation Accuracy | **83.57% ± 0.77%** |
+
+> Results are averaged over 5 folds.
+
+### Detailed Logs
+
+Full experimental logs and configurations are available here:  
+👉 [View Experiment Logs](./docs/experiment_log.md)
 
 ---
