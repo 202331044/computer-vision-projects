@@ -14,20 +14,46 @@ def run(model_name, epochs, batch_size, opt_name, is_early_stopping, patience):
     u.set_seed(42)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5),(0.5, 0.5, 0.5))])
 
     full_train_datasets = torchvision.datasets.CIFAR10(
         root = "./data",
         train = True,
-        transform = transform,
+        transform = None,
         download = True
     )
 
     test_datasets = torchvision.datasets.CIFAR10(
         root = "./data",
         train = False,
-        transform = transform
-    )
+        transform = None
+    ) 
+
+    train_transform = transforms.Compose([
+        transforms.RandomCrop(32, padding = 4),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    ])
+
+    val_transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    ])
+
+    # transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5),(0.5, 0.5, 0.5))])
+
+    # full_train_datasets = torchvision.datasets.CIFAR10(
+    #     root = "./data",
+    #     train = True,
+    #     transform = transform,
+    #     download = True
+    # )
+
+    # test_datasets = torchvision.datasets.CIFAR10(
+    #     root = "./data",
+    #     train = False,
+    #     transform = transform
+    # )
 
     # #split train/val data
     # train_indices, val_indices = train_test_split(
@@ -55,7 +81,8 @@ def run(model_name, epochs, batch_size, opt_name, is_early_stopping, patience):
 
     run_cross_validate(full_train_datasets, model_name, loss_function, device, batch_size=batch_size,
                     n_splits=n_splits, epochs=epochs, patience=patience, opt_name=opt_name,
-                     is_early_stopping=is_early_stopping,  load_file=load_data_path)
+                     is_early_stopping=is_early_stopping,  load_file=load_data_path,
+                     train_transform = train_transform, val_transform = val_transform)
 
 
 if __name__ == "__main__":

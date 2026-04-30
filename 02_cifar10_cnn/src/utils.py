@@ -6,6 +6,20 @@ import pickle
 from sklearn.model_selection import StratifiedKFold
 import random
 
+class SubsetWithTransform(torch.utils.data.Dataset):
+    def __init__(self, data, indices, transform):
+        self.data = data
+        self.indices = indices
+        self.transform = transform
+    
+    def __getitem__(self, idx):
+        img, label = self.data[self.indices[idx]]
+        img = self.transform(img)
+        return img, label
+
+    def __len__(self):
+        return len(self.indices)
+
 def get_model(model_name):
     if model_name == "baseline":
         return m.CNN()
@@ -34,7 +48,7 @@ def get_model(model_name):
     elif model_name == 'task10_1':
         return m.Task10CNN(use_residual=False)
     elif model_name == 'task10_2':
-        return m.Task10CNN(use_residual=True) 
+        return m.Task10CNN(use_residual=True)
     else:
         raise ValueError("Unkown model")
 

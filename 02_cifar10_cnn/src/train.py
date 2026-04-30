@@ -163,7 +163,8 @@ def cross_validate(datasets, model_name, loss_function, device, batch_size=32,
 
 def run_cross_validate(datasets, model_name, loss_function, device, batch_size=32, 
                       n_splits=5, epochs=10, patience=5, opt_name="Adam", 
-                      is_early_stopping=False, load_file="splits.pkl"):
+                      is_early_stopping=False, load_file="splits.pkl",
+                      train_transform = None, val_transform = None):
     
     splits = u.load_train_val_data(load_file)
 
@@ -182,8 +183,11 @@ def run_cross_validate(datasets, model_name, loss_function, device, batch_size=3
         g = torch.Generator()
         g.manual_seed(42)
 
-        train_datasets = torch.utils.data.Subset(datasets, train_idx)
-        val_datasets = torch.utils.data.Subset(datasets, val_idx)
+        train_datasets = u.SubsetWithTransform(datasets, train_idx, train_transform)
+        val_datasets = u.SubsetWithTransform(datasets, val_idx, val_transform)
+
+        # train_datasets = torch.utils.data.Subset(datasets, train_idx)
+        # val_datasets = torch.utils.data.Subset(datasets, val_idx)
 
         train_data = torch.utils.data.DataLoader(train_datasets, batch_size=batch_size, shuffle=True, generator=g)
         val_data = torch.utils.data.DataLoader(val_datasets, batch_size=batch_size, shuffle=False)
