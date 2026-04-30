@@ -6,8 +6,15 @@ import numpy as np
 
 def train(train_data, val_data, model, loss_function, device, optimizer, epochs=10, patience=5, is_early_stopping=False):
     
-    best_val_loss = float('inf')
-    best_val_acc = 0
+    train_loss = 0
+    train_acc = 0
+
+    best_loss = float('inf')
+    acc_at_best_loss = 0
+
+    loss_at_best_acc  = float('inf')
+    best_acc  = 0
+
     count = 0
 
     # scheduler = StepLR(optimizer, step_size=10, gamma=0.01)
@@ -56,20 +63,35 @@ def train(train_data, val_data, model, loss_function, device, optimizer, epochs=
         print(f"Val Loss: {val_loss:.4f} Val Acc: {val_acc:.2f}%")
         print("-------------------------")
 
-        if best_val_loss > val_loss:
-            best_val_loss = val_loss
-            best_val_acc = val_acc
+        if best_loss > val_loss:
+            best_loss = val_loss
+            acc_at_best_loss = val_acc
+
+            train_loss = train_sum_loss/total
+            train_acc = correct/total * 100
+            
             count = 0
             #torch.save(model.state_dict(), "best.pth")
         else:
             count += 1
+
+        if  val_acc > best_acc:
+            best_acc = val_acc
+            loss_at_best_acc = val_loss
 
         if(is_early_stopping):
             if count >= patience:
                 print("-----------Early Stopping-----------")
                 break
 
-    return best_val_loss, best_val_acc
+    return {
+    "best_loss": best_loss,
+    "acc_at_best_loss": acc_at_best_loss,
+    "best_acc": best_acc,
+    "loss_at_best_acc": loss_at_best_acc,
+    "train_loss_at_best_loss": train_loss,
+    "train_acc_at_best_loss": train_acc
+    } 
 
 def evaluate(data, model, loss_function, device):
 
@@ -144,8 +166,15 @@ def run_cross_validate(datasets, model_name, loss_function, device, batch_size=3
                       is_early_stopping=False, load_file="splits.pkl"):
     
     splits = u.load_train_val_data(load_file)
-    val_losses = []
-    val_accs = []
+
+    best_losses = []
+    accs_at_best_loss = []
+
+    losses_at_best_acc = []
+    best_accs = []
+
+    train_losses = []
+    train_accs = []
 
     for fold, (train_idx, val_idx) in enumerate(splits):
 
@@ -163,14 +192,40 @@ def run_cross_validate(datasets, model_name, loss_function, device, batch_size=3
         optimizer = u.get_optimizer(opt_name, model)
 
         print(f"--------fold {fold + 1}--------")
-
-        val_loss, val_acc = train(train_data, val_data, model, loss_function, device, optimizer,
+             
+        results = train(train_data, val_data, model, loss_function, device, optimizer,
                             epochs, patience, is_early_stopping=is_early_stopping)
-        val_losses.append(val_loss)
-        val_accs.append(val_acc)
+        
+        best_losses.append(results["best_loss"])
+        accs_at_best_loss.append(results["acc_at_best_loss"])
 
-        print(f"fold {fold + 1} - Val Loss: {val_loss:.4f} Val Acc: {val_acc:.2f}%")
+        losses_at_best_acc.append(results["loss_at_best_acc"])
+        best_accs.append(results["best_acc"])
+
+        train_losses.append(results["train_loss_at_best_loss"])
+        train_accs.append(results["train_acc_at_best_loss"])
+
+        print(f"fold {fold + 1} - Val Loss By Loss: {results['best_loss']:.4f} "
+        f"Val Acc By Loss: {results['acc_at_best_loss']:.2f}%")
+
+        print(f"fold {fold + 1} - Val Loss By Acc: {results['loss_at_best_acc']:.4f} "
+        f"Val Acc By Acc: {results['best_acc']:.2f}%")
 
     print("-------------------------")
-    print(f"Val Mean Loss: {np.mean(val_losses):.4f} ± {np.std(val_losses):.4f}")
-    print(f"Val Mean Acc: {np.mean(val_accs):.2f}% ± {np.std(val_accs):.2f}%")
+    print("[Best Accuracy Based Performance]")
+    print(f"Val Mean Loss By Acc: {np.mean(losses_at_best_acc):.4f} ± {np.std(losses_at_best_acc):.4f}")
+    print(f"Val Mean Acc By Acc: {np.mean(best_accs):.2f}% ± {np.std(best_accs):.2f}%")
+    
+    print("-------------------------")
+    print("[Best Loss Based Performance (More Stable)]")
+    print(f"Val Mean Loss By Loss: {np.mean(best_losses):.4f} ± {np.std(best_losses):.4f}")
+    print(f"Val Mean Acc By Loss: {np.mean(accs_at_best_loss):.2f}% ± {np.std(accs_at_best_loss):.2f}%")
+
+    print("-------------------------")
+    print("[Train]")
+    print(f"Train loss: {np.mean(train_losses):.4f} ± {np.std(train_losses):.4f}")
+    print(f"Train Acc: {np.mean(train_accs):.2f}% ± {np.std(train_accs):.2f}%")
+    
+    print("-------------------------")
+    print("[Generalization Gap]")
+    print(f"Gap (Best Loss Based): {np.mean(train_accs) - np.mean(accs_at_best_loss):.2f}%")
