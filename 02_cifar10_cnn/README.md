@@ -143,6 +143,8 @@ To improve CNN performance on CIFAR-10 classification, the following experiments
 
 ### Best Model
 
+The Step 16 model (with RandAugment) achieved the best performance in terms of both loss and accuracy.
+
 #### Architecture
 
 | Stage     | Layer / Block | Output Shape   | Details                        |
@@ -163,8 +165,8 @@ To improve CNN performance on CIFAR-10 classification, the following experiments
 
 | Model | Val Loss | Val Acc |
 |-------|----------|---------|
-| Accuracy-best | 0.3977 ± 0.0205 | **88.11% ± 0.38%** |
-| Loss-best | 0.3829 ± 0.0038 | **88.09% ± 0.37%** |
+| Accuracy-best | 0.3269 ± 0.0033 | **89.94% ± 0.58%** |
+| Loss-best | 0.3186 ± 0.0106 | **89.75% ± 0.46%** |
 
 > Results are averaged over 5 folds.
 
