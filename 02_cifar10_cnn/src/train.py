@@ -189,7 +189,7 @@ def run_cross_validate(datasets, model_name, loss_function, device, batch_size=3
         # train_datasets = torch.utils.data.Subset(datasets, train_idx)
         # val_datasets = torch.utils.data.Subset(datasets, val_idx)
 
-        train_data = torch.utils.data.DataLoader(train_datasets, batch_size=batch_size, shuffle=True, generator=g)
+        train_data = torch.utils.data.DataLoader(train_datasets, batch_size=batch_size, shuffle=True, generator=g, worker_init_fn=u.seed_worker)
         val_data = torch.utils.data.DataLoader(val_datasets, batch_size=batch_size, shuffle=False)
 
         model = u.get_model(model_name).to(device)

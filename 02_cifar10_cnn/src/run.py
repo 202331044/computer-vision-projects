@@ -31,6 +31,7 @@ def run(model_name, epochs, batch_size, opt_name, is_early_stopping, patience):
     train_transform = transforms.Compose([
         transforms.RandomCrop(32, padding = 4),
         transforms.RandomHorizontalFlip(),
+        transforms.RandAugment(num_ops = 2, magnitude = 7),
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])

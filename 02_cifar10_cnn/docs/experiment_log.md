@@ -232,7 +232,7 @@ Step 4: No performance change compared to step 3.
 
 - The increased standard deviation is mainly due to higher model capacity, which increases sensitivity to initialization and data variation. Additionally, improved optimization flexibility may lead to convergence to different local minima, increasing variability across runs.
 
-### Step 12. Residual Block: No Conv Bias
+## Step 12. Residual Block: No Conv Bias
 
 ### 📊 Performance Comparison
 
@@ -251,7 +251,7 @@ Step 4: No performance change compared to step 3.
 
 - These small differences may be due to changes in training dynamics. Specifically, removing the bias can slightly alter the feature distribution before Batch Normalization, leading to minor variations in performance.
 
-### Step 13. Stride-Based Downsampling without Pooling
+## Step 13. Stride-Based Downsampling without Pooling
 
 ### 📊 Performance Comparison
 
@@ -270,7 +270,7 @@ Step 4: No performance change compared to step 3.
 
 - Interestingly, Step 13 exhibits reduced variance across folds (lower standard deviation), likely due to more uniform feature aggregation in stride-based convolution, which reduces reliance on highly activated local responses. However, this comes at the cost of reduced average performance, suggesting more stable but less expressive representations.
 
-### Step 14. Double Residual Blocks per Stage
+## Step 14. Double Residual Blocks per Stage
 
 - Previous:
 [Residual Block ×2] → Pool → [Residual Block ×2] → Pool
@@ -297,7 +297,7 @@ Step 4: No performance change compared to step 3.
 
 - Overall, deeper networks improve performance through richer feature extraction, while skip connections amplify this effect and ensure stable training.
 
-### Step 15. Data Augmentation
+## Step 15. Data Augmentation
 
 The following data augmentation techniques were applied to the Step 14 model training pipeline:
 
@@ -328,5 +328,33 @@ The following data augmentation techniques were applied to the Step 14 model tra
 - Step 15 achieves the best overall performance among all tested models. It also shows reduced standard deviation compared to Step 14, indicating improved stability across folds. This improvement is attributed to the increased feature diversity and generalization effect introduced by data augmentation.
 
 - The gap between training and validation accuracy at the best-loss point is below 5%, suggesting low overfitting.
+
+## Step 16. Data Augmentation (RandAugment)
+
+- **RandAugment (num_ops=2, magnitude=7)**  
+  → applies two random augmentation operations with moderate strength to improve generalization
+
+### 📊 Performance Comparison
+
+| Metric | Step 15 | Step 16 |
+|--------|---------|---------|
+| Validation Loss (Best by Loss) | 0.3829 ± 0.0038 | 0.3186 ± 0.0106 |
+| Validation Accuracy (Best by Loss) | 88.09% ± 0.37% | 89.75% ± 0.46% |
+| Validation Loss (Best by Accuracy) | 0.3977 ± 0.0205 | 0.3269 ± 0.0033 |
+| Validation Accuracy (Best by Accuracy) | 88.11% ± 0.38% | 89.94% ± 0.58% |
+| Generalization Gap (Best Loss-based) | 4.48% | 1.00% |
+
+
+> Results are averaged over 5 folds.
+
+### 📉 Analysis
+
+- Additional data augmentation with RandAugment achieved the best performance (loss and accuracy) among the evaluated models.
+
+- While training performance slightly decreased compared to Step 15, validation performance improved, indicating that the model is learning more generalizable feature representations rather than memorizing the training data.
+
+- The standard deviation generally increased compared to Step 15. This may indicate that, while improved generalization was achieved through learning more diverse feature representations, the increased stochasticity in the training process also led to higher variability in the results.
+
+- Overall, these results suggest that RandAugment acts as an effective regularization technique, reducing overfitting and improving generalization by encouraging the model to learn invariant and diverse feature representations.
 
 ---
