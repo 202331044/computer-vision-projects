@@ -5,8 +5,10 @@ from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 import torch.optim as optim
 import torch.nn as nn
+import argparse
+import time
 
-def run():
+def run(mode):
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
@@ -32,6 +34,11 @@ def run():
     test_loader = DataLoader(test_datasets, batch_size = 32, shuffle = False)
 
     model = models.resnet18(weights = 'IMAGENET1K_V1')
+
+    if(mode == 'freeze'):
+        for p in model.parameters():
+            p.requires_grad = False
+
     model.fc = nn.Linear(model.fc.in_features, 10)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -39,7 +46,14 @@ def run():
 
     num_epochs = 5
 
-    optimizer = optim.Adam(model.parameters(), lr = 0.001)
+
+    if(mode == 'freeze'):
+        optimizer = optim.Adam(model.fc.parameters(), lr = 0.001)
+    elif(mode == 'finetune'):
+        optimizer = optim.Adam(model.parameters(), lr = 0.0001)
+    else:
+        raise ValueError("mode must be 'freeze' or 'finetune'")
+
     criterion = nn.CrossEntropyLoss()
 
     train(device, model, train_loader, num_epochs, optimizer, criterion)
@@ -48,6 +62,8 @@ def run():
 
 def train(device, model, train_loader, num_epochs, optimizer, criterion):
     for epoch in range(num_epochs):
+        start_time = time.time()
+
         model.train()
 
         running_loss = 0
@@ -75,8 +91,12 @@ def train(device, model, train_loader, num_epochs, optimizer, criterion):
 
             running_loss += loss.item() * batch_size
 
+        elapsed_time = time.time() - start_time
+
         accuracy = correct / total * 100
-        print(f'[Train {epoch + 1} / {num_epochs}] Loss: {running_loss/total:.4f}, Accuracy: {accuracy:.2f}%')
+        print(f'[Train {epoch + 1} / {num_epochs}]',
+              f'Loss: {running_loss/total:.4f}, Accuracy: {accuracy:.2f}%, ',
+              f'Time: {elapsed_time:.2f}s')
 
 
 def test(device, model, test_loader, criterion):
@@ -106,7 +126,7 @@ def test(device, model, test_loader, criterion):
 
     print(f'[Test] Loss: {running_loss/total:.4f}, Accuracy: {accuracy:.2f}%')
       
-
+      
 if __name__ == '__main__':
     # model = models.resnet18(weights = "IMAGENET1K_V1")
     # #print(model)
@@ -115,4 +135,10 @@ if __name__ == '__main__':
     # #print(f"total parameters: {total_params}")
 
     # summary(model, input_size = (1, 3, 224, 224))
-    run()
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--mode', type = str, default = 'freeze')
+    args = parser.parse_args()
+
+    run(args.mode)
