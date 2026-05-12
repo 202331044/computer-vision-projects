@@ -8,7 +8,16 @@ import torch.nn as nn
 import argparse
 import time
 
-def run(mode):
+def run(mode, is_aug, opt, scheduler_name):
+    aug_transform = transforms.Compose([
+        transforms.RandomCrop(32, padding = 4),
+        transforms.RandomHorizontalFlip(),
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize( mean=[0.485, 0.456, 0.406],
+                                std=[0.229, 0.224, 0.225])
+    ])
+    
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
@@ -20,7 +29,7 @@ def run(mode):
         root = './data',
         train = True,
         download = True,
-        transform = transform
+        transform = aug_transform if is_aug else transform
     )
 
     test_datasets = datasets.CIFAR10(
@@ -35,7 +44,7 @@ def run(mode):
 
     model = models.resnet18(weights = 'IMAGENET1K_V1')
 
-    if(mode == 'freeze'):
+    if mode == 'freeze':
         for p in model.parameters():
             p.requires_grad = False
 
@@ -47,20 +56,35 @@ def run(mode):
     num_epochs = 5
 
 
-    if(mode == 'freeze'):
+    if mode == 'freeze':
         optimizer = optim.Adam(model.fc.parameters(), lr = 0.001)
-    elif(mode == 'finetune'):
-        optimizer = optim.Adam(model.parameters(), lr = 0.0001)
+
+    elif mode == 'finetune':
+        if opt == 'SGD':
+            optimizer = optim.SGD(model.parameters(), lr = 0.01, momentum = 0.9)
+        elif opt == 'Adam':
+            optimizer = optim.Adam(model.parameters(), lr = 0.0001)
+        else:
+            raise ValueError("opt must be 'SGD' or 'Adam'")
+
     else:
         raise ValueError("mode must be 'freeze' or 'finetune'")
 
     criterion = nn.CrossEntropyLoss()
 
-    train(device, model, train_loader, num_epochs, optimizer, criterion)
+    train(device, model, train_loader, num_epochs, optimizer, criterion, scheduler_name)
     test(device, model, test_loader, criterion)
 
 
-def train(device, model, train_loader, num_epochs, optimizer, criterion):
+def train(device, model, train_loader, num_epochs, optimizer, criterion, scheduler_name):
+    
+    scheduler = None
+    
+    if scheduler_name == 'StepLR':
+        scheduler = optim.lr_scheduler.StepLR(optimizer, step_size = 2, gamma = 0.1)
+    elif scheduler_name == 'CosineLR':
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max = num_epochs)
+
     for epoch in range(num_epochs):
         start_time = time.time()
 
@@ -94,6 +118,10 @@ def train(device, model, train_loader, num_epochs, optimizer, criterion):
         elapsed_time = time.time() - start_time
 
         accuracy = correct / total * 100
+
+        if scheduler is not None:
+            scheduler.step()
+
         print(f'[Train {epoch + 1} / {num_epochs}]',
               f'Loss: {running_loss/total:.4f}, Accuracy: {accuracy:.2f}%, ',
               f'Time: {elapsed_time:.2f}s')
@@ -139,6 +167,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--mode', type = str, default = 'freeze')
+    parser.add_argument('--augmentation', action = 'store_true')
+    parser.add_argument('--optimizer', type = str, default = 'SGD')
+    parser.add_argument('--scheduler', type = str, default = 'StepLR')
     args = parser.parse_args()
 
-    run(args.mode)
+    run(args.mode, args.augmentation, args.optimizer, args.scheduler)
