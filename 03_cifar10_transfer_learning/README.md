@@ -117,6 +117,7 @@ Transfer learning experiments on CIFAR-10 using a pretrained ResNet-18 model.
 | StepLR | 0.1310 | 95.80% |
 | CosineAnnealingLR | 0.1453 | 95.58% |
 
-👉 [View Detailed Results](./experiments/resnet18.ipynb)
+👉 [View ResNet-18 Notebook](./experiments/resnet18.ipynb)  
+👉 [View Detailed Analysis](./docs/experiment_log.md)
 
 ---
