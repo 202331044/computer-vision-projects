@@ -29,3 +29,4 @@ Each folder contains:
 |--------|------------|------|
 | 01_mnist_mlp | MLP for MNIST digit classification | [View](./01_mnist_mlp) |
 | 02_cifar10_cnn | CNN for CIFAR-10 image classification | [View](./02_cifar10_cnn) |
+| 03_cifar10_transfer_learning | Transfer learning on CIFAR-10 using pretrained CNN models | [View](./03_cifar10_transfer_learning) |
