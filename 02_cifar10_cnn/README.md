@@ -74,7 +74,7 @@ $O = \lfloor \frac{I + 2P - K }{S} \rfloor + 1$
 --- 
 ## 🚀 Experiment
 
-### CIFAR10 Dataset
+### CIFAR-10 Dataset
 
 - Image size: 32 × 32 (RGB)
 - Classes: 10
@@ -172,7 +172,9 @@ The Step 16 model (with RandAugment) achieved the best performance in terms of b
 
 ### Detailed Logs
 
-Full experimental logs and configurations are available here:  
-👉 [View Experiment Logs](./docs/experiment_log.md)
+Full experimental logs, notebooks, and analysis are available here:
+
+👉 [View Experiment Notebooks](./experiments)  
+👉 [View Detailed Analysis](./docs/experiment_log.md)
 
 ---
