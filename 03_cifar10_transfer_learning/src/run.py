@@ -7,8 +7,13 @@ import torch.optim as optim
 import torch.nn as nn
 import argparse
 import train as tr
+import model as md
+import utils as ut
 
-def run(mode, is_aug, opt, scheduler_name):
+def run(mode, is_aug, opt, scheduler_name, epochs):
+
+    ut.set_seed(42)
+
     aug_transform = transforms.Compose([
         transforms.RandomCrop(32, padding = 4),
         transforms.RandomHorizontalFlip(),
@@ -39,7 +44,12 @@ def run(mode, is_aug, opt, scheduler_name):
         transform = transform
     )
 
-    train_loader = DataLoader(train_datasets, batch_size = 32, shuffle = True)
+    g = torch.Generator()
+    g.manual_seed(42)
+
+    train_loader = DataLoader(train_datasets, batch_size = 32, shuffle = True, generator = g, num_workers=1,
+    worker_init_fn = ut.seed_worker)
+
     test_loader = DataLoader(test_datasets, batch_size = 32, shuffle = False)
 
     model = models.resnet18(weights = 'IMAGENET1K_V1')
@@ -72,7 +82,7 @@ def run(mode, is_aug, opt, scheduler_name):
 
     criterion = nn.CrossEntropyLoss()
 
-    tr.train(device, model, train_loader, num_epochs, optimizer, criterion, scheduler_name)
+    tr.train(device, model, train_loader, epochs, optimizer, criterion, scheduler_name)
     tr.test(device, model, test_loader, criterion)
 
 
@@ -89,8 +99,9 @@ if __name__ == '__main__':
 
     parser.add_argument('--mode', type = str, default = 'freeze')
     parser.add_argument('--augmentation', action = 'store_true')
-    parser.add_argument('--optimizer', type = str, default = 'SGD')
-    parser.add_argument('--scheduler', type = str, default = 'StepLR')
+    parser.add_argument('--optimizer', type = str, default = 'Adam')
+    parser.add_argument('--scheduler', type = str, default = 'None')
+    parser.add_argument('--epochs', type = int, default = 5)
     args = parser.parse_args()
 
-    run(args.mode, args.augmentation, args.optimizer, args.scheduler)
+    run(args.mode, args.augmentation, args.optimizer, args.scheduler, args.epochs)

@@ -6,15 +6,16 @@
 
 | Method | Loss | Accuracy |
 |--------|------|----------|
-| Freeze | 0.5699 | 80.53% |
-| Fine-Tuning | 0.2506 | 92.63% |
+| Freeze | 0.5754 | 80.75% |
+| Fine-Tuning | 0.1898 | 94.15% |
 
 ### 📉 Analysis
 
 In the freeze setting, only the fully connected (FC) layer is trainable, while in fine-tuning the entire model is trainable.
 
 - Fine-tuning achieved better performance in both loss and accuracy. However, training time increased because the entire model was retrained. 
-- The experimental results reflected the characteristics of each method well.
+
+- This result clearly reflects the tendency of each method: the freeze setting enables faster training because only the FC layer is trainable, while fine-tuning achieves better performance because all model parameters are trainable.
 
 ## 2. Data Augmentation
 
@@ -22,15 +23,24 @@ In the freeze setting, only the fully connected (FC) layer is trainable, while i
 
 | Augmentation | Loss | Accuracy |
 |--------------|------|----------|
-| No Augmentation | 0.1979 | 93.87% |
-| RandomCrop + Flip | 0.1680 | 94.74% |
+| No Augmentation | 0.1898 | 94.15% |
+| RandomCrop + Flip | 0.1913 | 93.75% |
+| No Augmentation (epochs = 10) | 0.2296 | 93.64% |
+| RandomCrop + Flip (epochs = 10) | 0.2027 | 94.32% |
 
 ### 📉 Analysis
 
 Data augmentation (RandomCrop and RandomHorizontalFlip) was applied and compared with the baseline setting without augmentation.
 
-- When data augmentation was applied, training performance decreased while test performance improved.
-- This experimentally demonstrates that data augmentation improves generalization performance by exposing the model to diverse input variations.
+- When data augmentation was applied, the test accuracy slightly decreased from 94.15% to 93.75%. Although augmentation generally improves generalization performance, the expected improvement was not observed in this experiment.
+
+- This is likely because training for only 5 epochs was insufficient for the model to adapt to the augmented data.
+
+- The experiment was trained for 10 epochs, and the augmentation case achieved the best performance (94.32%) among all settings. This suggests that data augmentation becomes more effective when the model is trained for a sufficient number of epochs.
+
+- In the no-augmentation case, performance slightly decreased compared to 5 epochs (94.15% → 93.64%), indicating that increasing epochs alone does not guarantee improved performance and may lead to minor fluctuations.
+
+- Overall, data augmentation is more effective when combined with sufficient training epochs, while it may show lower performance under short training conditions.
 
 ## 3. Optimizer (Adam vs SGD)
 
@@ -38,17 +48,18 @@ Data augmentation (RandomCrop and RandomHorizontalFlip) was applied and compared
 
 | Optimizer | Loss | Accuracy |
 |-----------|------|----------|
-| Adam | 0.1994 | 93.91% |
-| SGD | 0.2903 | 91.84% |
+| Adam | 0.1898 | 94.15% |
+| SGD | 0.2772 | 91.78% |
 
 ### 📉 Analysis
 
 The experimental results of Adam and SGD were compared.
 
-- Adam achieved higher training accuracy than SGD from the early epochs and converged faster during training.
-- In addition, Adam achieved better test accuracy and lower test loss in this experiment.
-- On the other hand, SGD showed relatively slower convergence in the early training stage, but its performance gradually improved as training progressed.
-- These results demonstrate the fast convergence characteristic of Adam and the slower but steady convergence behavior of SGD.
+- Adam achieved higher training accuracy from the early epochs and converged faster during training. In this experiment, Adam also showed better test accuracy and lower test loss than SGD.
+
+- In contrast, SGD showed slower convergence during the early training stage, resulting in lower performance within 5 epochs.
+
+- These results reflect the tendency of Adam to converge faster than SGD under limited training epochs.
 
 ## 4. Learning Rate Scheduler
 
@@ -56,17 +67,18 @@ The experimental results of Adam and SGD were compared.
 
 | Scheduler | Loss | Accuracy |
 |-----------|------|----------|
-| None | 0.1346 | 95.64% |
-| StepLR | 0.1310 | 95.80% |
-| CosineAnnealingLR | 0.1453 | 95.58% |
+| None | 0.1898 | 94.15% |
+| StepLR | 0.1279 | 95.90% |
+| CosineAnnealingLR | 0.1362 | 95.88% |
 
 ### 📉 Analysis
 
-The experimental results of the baseline setting, StepLR, and CosineAnnealingLR were compared.
+The performances of the baseline model, StepLR, and CosineAnnealingLR were compared.
 
-- The experimental results showed similar performance among the baseline, StepLR, and CosineAnnealingLR settings.
-- Among them, StepLR achieved the highest test accuracy, while CosineAnnealingLR showed slightly lower performance than the baseline in this experiment.
-- However, the performance differences were relatively small. This suggests that the effect of learning rate schedulers may not be significant in short training settings such as 5 epochs.
-- In addition, CosineAnnealingLR may show its advantages more clearly in longer training settings because it reduces the learning rate more smoothly and gradually.
+- StepLR achieved the best performance, while the baseline model without a scheduler showed the lowest performance. StepLR and CosineAnnealingLR produced very similar results.
+
+- Since the experiment was conducted for only 5 epochs, StepLR was more effective because it reduced the learning rate quickly, leading to faster convergence. In contrast, the advantages of CosineAnnealingLR may not have been fully reflected in such a short training setting.
+
+- Overall, applying a learning rate scheduler improved performance, and StepLR was effective in short training scenarios.
 
 ---

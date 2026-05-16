@@ -5,7 +5,7 @@ import torch
 def train(device, model, train_loader, num_epochs, optimizer, criterion, scheduler_name):
     
     scheduler = None
-    
+
     if scheduler_name == 'StepLR':
         scheduler = optim.lr_scheduler.StepLR(optimizer, step_size = 2, gamma = 0.1)
     elif scheduler_name == 'CosineLR':
@@ -43,13 +43,14 @@ def train(device, model, train_loader, num_epochs, optimizer, criterion, schedul
 
         elapsed_time = time.time() - start_time
 
+        epoch_loss = running_loss / total
         accuracy = correct / total * 100
 
         if scheduler is not None:
             scheduler.step()
 
         print(f'[Train {epoch + 1} / {num_epochs}]',
-              f'Loss: {running_loss/total:.4f}, Accuracy: {accuracy:.2f}%, ',
+              f'Loss: {epoch_loss:.4f}, Accuracy: {accuracy:.2f}%, ',
               f'Time: {elapsed_time:.2f}s')
 
 

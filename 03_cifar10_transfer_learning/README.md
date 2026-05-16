@@ -86,8 +86,8 @@ Transfer learning experiments on CIFAR-10 using a pretrained ResNet-18 model.
 
 | Method | Loss | Accuracy |
 |--------|------|----------|
-| Freeze | 0.5699 | 80.53% |
-| Fine-Tuning | 0.2506 | 92.63% |
+| Freeze | 0.5754 | 80.75% |
+| Fine-Tuning | 0.1898 | 94.15% |
 
 ---
 
@@ -95,8 +95,10 @@ Transfer learning experiments on CIFAR-10 using a pretrained ResNet-18 model.
 
 | Augmentation | Loss | Accuracy |
 |--------------|------|----------|
-| No Augmentation | 0.1979 | 93.87% |
-| RandomCrop + Flip | 0.1680 | 94.74% |
+| No Augmentation | 0.1898 | 94.15% |
+| RandomCrop + Flip | 0.1913 | 93.75% |
+| No Augmentation (epochs = 10) | 0.2296 | 93.64% |
+| RandomCrop + Flip (epochs = 10) | 0.2027 | 94.32% |
 
 ---
 
@@ -104,8 +106,8 @@ Transfer learning experiments on CIFAR-10 using a pretrained ResNet-18 model.
 
 | Optimizer | Loss | Accuracy |
 |-----------|------|----------|
-| SGD | 0.2903 | 91.84% |
-| Adam | 0.1994 | 93.91% |
+| Adam | 0.1898 | 94.15% |
+| SGD | 0.2772 | 91.78% |
 
 ---
 
@@ -113,9 +115,9 @@ Transfer learning experiments on CIFAR-10 using a pretrained ResNet-18 model.
 
 | Scheduler | Loss | Accuracy |
 |-----------|------|----------|
-| None | 0.1346 | 95.64% |
-| StepLR | 0.1310 | 95.80% |
-| CosineAnnealingLR | 0.1453 | 95.58% |
+| None | 0.1898 | 94.15% |
+| StepLR | 0.1279 | 95.90% |
+| CosineAnnealingLR | 0.1362 | 95.88% |
 
 👉 [View ResNet-18 Notebook](./experiments/resnet18.ipynb)  
 👉 [View Detailed Analysis](./docs/experiment_log.md)
