@@ -10,19 +10,13 @@ import train as tr
 import model as md
 import utils as ut
 
-def run(mode, is_aug, opt, scheduler_name, epochs):
+def run(mode, model_name, is_aug, aug_type, opt, scheduler_name, epochs):
 
     ut.set_seed(42)
 
-    aug_transform = transforms.Compose([
-        transforms.RandomCrop(32, padding = 4),
-        transforms.RandomHorizontalFlip(),
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize( mean=[0.485, 0.456, 0.406],
-                                std=[0.229, 0.224, 0.225])
-    ])
-    
+    if is_aug:
+        aug_transform = ut.get_augmentation(aug_type)
+        
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
@@ -52,7 +46,7 @@ def run(mode, is_aug, opt, scheduler_name, epochs):
 
     test_loader = DataLoader(test_datasets, batch_size = 32, shuffle = False)
 
-    model = models.resnet18(weights = 'IMAGENET1K_V1')
+    model = ut.get_model(model_name)
 
     if mode == 'freeze':
         for p in model.parameters():
@@ -63,22 +57,7 @@ def run(mode, is_aug, opt, scheduler_name, epochs):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
 
-    num_epochs = 5
-
-
-    if mode == 'freeze':
-        optimizer = optim.Adam(model.fc.parameters(), lr = 0.001)
-
-    elif mode == 'finetune':
-        if opt == 'SGD':
-            optimizer = optim.SGD(model.parameters(), lr = 0.01, momentum = 0.9)
-        elif opt == 'Adam':
-            optimizer = optim.Adam(model.parameters(), lr = 0.0001)
-        else:
-            raise ValueError("opt must be 'SGD' or 'Adam'")
-
-    else:
-        raise ValueError("mode must be 'freeze' or 'finetune'")
+    optimizer = ut.get_optimizer(mode, model, optimizer)
 
     criterion = nn.CrossEntropyLoss()
 
@@ -98,10 +77,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--mode', type = str, default = 'freeze')
+    parser.add_argument('--model', type = str, default = 'ResNet18')
     parser.add_argument('--augmentation', action = 'store_true')
     parser.add_argument('--optimizer', type = str, default = 'Adam')
     parser.add_argument('--scheduler', type = str, default = 'None')
     parser.add_argument('--epochs', type = int, default = 5)
+    parser.add_argument('--aug-type', type = str, default = 'base')
+
     args = parser.parse_args()
 
-    run(args.mode, args.augmentation, args.optimizer, args.scheduler, args.epochs)
+    run(args.mode, args.model, args.augmentation, args.aug_type, args.optimizer, args.scheduler, args.epochs)
