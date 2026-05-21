@@ -92,7 +92,7 @@ class ResNet50(nn.Module):
 
         return out
 
-class ResNet50_cifar(nn.Module):
+class ResNet50CIFAR(nn.Module):
     def __init__(self):
         super().__init__()
 
@@ -158,7 +158,6 @@ class Residual(nn.Module):
 
         if downsample is not None:
             self.downsample = downsample
-
 
     def forward(self, x):
         identity = x
@@ -231,7 +230,7 @@ class ResNet18(nn.Module):
 
         return out
     
-class ResNet18_cifar(nn.Module):
+class ResNet18CIFAR(nn.Module):
     def __init__(self):
         super().__init__()
         

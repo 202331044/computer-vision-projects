@@ -10,19 +10,26 @@ import train as tr
 import model as md
 import utils as ut
 
-def run(mode, model_name, is_aug, aug_type, opt, scheduler_name, epochs):
+def run(mode, model_name, is_aug, opt, scheduler_name, epochs, lr):
 
     ut.set_seed(42)
 
     if is_aug:
-        aug_transform = ut.get_augmentation(aug_type)
-        
-    transform = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize( mean=[0.485, 0.456, 0.406],
-                            std=[0.229, 0.224, 0.225])
-        ])
+        aug_transform = ut.get_augmentation()
+    
+    if mode == 'manual':
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
+                                 std=[0.2470, 0.2435, 0.2616])
+            ])
+    else:
+        transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])
+            ])
 
     train_datasets = datasets.CIFAR10(
         root = './data',
@@ -41,8 +48,8 @@ def run(mode, model_name, is_aug, aug_type, opt, scheduler_name, epochs):
     g = torch.Generator()
     g.manual_seed(42)
 
-    train_loader = DataLoader(train_datasets, batch_size = 32, shuffle = True, generator = g, num_workers=1,
-    worker_init_fn = ut.seed_worker)
+    train_loader = DataLoader(train_datasets, batch_size = 32, shuffle = True, 
+                              generator = g, num_workers=1, worker_init_fn = ut.seed_worker)
 
     test_loader = DataLoader(test_datasets, batch_size = 32, shuffle = False)
 
@@ -57,7 +64,10 @@ def run(mode, model_name, is_aug, aug_type, opt, scheduler_name, epochs):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
 
-    optimizer = ut.get_optimizer(mode, model, optimizer)
+    if mode == 'freeze':
+        optimizer = ut.get_optimizer(model.fc.parameters(), opt, lr)
+    else:
+        optimizer = ut.get_optimizer(model.parameters(), opt, lr)
 
     criterion = nn.CrossEntropyLoss()
 
@@ -76,14 +86,19 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--mode', type = str, default = 'freeze')
-    parser.add_argument('--model', type = str, default = 'ResNet18')
+    parser.add_argument('--mode', type = str, default = 'freeze', 
+                        choices = ['freeze', 'finetune', 'manual'])
+    parser.add_argument('--model', type = str, default = 'resnet18',
+                        choices = ['resnet18', 'resnet50', 'resnet18_manual', 'resnet50_manual'])
     parser.add_argument('--augmentation', action = 'store_true')
-    parser.add_argument('--optimizer', type = str, default = 'Adam')
-    parser.add_argument('--scheduler', type = str, default = 'None')
+    parser.add_argument('--optimizer', type = str, default = 'adam',
+                        choices = ['adam', 'sgd'])
+    parser.add_argument('--scheduler', type = str, default = 'none',
+                        choices = ['none', 'steplr', 'cosinelr'])
     parser.add_argument('--epochs', type = int, default = 5)
-    parser.add_argument('--aug-type', type = str, default = 'base')
+    parser.add_argument('--lr', type = float, default = 1e-3)
 
     args = parser.parse_args()
 
-    run(args.mode, args.model, args.augmentation, args.aug_type, args.optimizer, args.scheduler, args.epochs)
+    run(args.mode, args.model, args.augmentation, args.optimizer, 
+        args.scheduler, args.epochs, args.lr)

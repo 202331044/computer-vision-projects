@@ -62,7 +62,7 @@ Transfer learning experiments on CIFAR-10 using a pretrained ResNet-18 model.
 - Training data: 50,000 samples
 - Test data: 10,000 samples
 
-### ResNet-18
+### ResNet-18 and ResNet-50
 
 #### Training Setup
 
@@ -84,42 +84,39 @@ Transfer learning experiments on CIFAR-10 using a pretrained ResNet-18 model.
 
 ##### Feature Extraction vs Fine-Tuning
 
-| Method | Loss | Accuracy |
-|--------|------|----------|
-| Freeze | 0.5754 | 80.75% |
-| Fine-Tuning | 0.1898 | 94.15% |
+| Method | ResNet18 | ResNet50 |
+|--------|-----------|-----------|
+| Freeze | 80.75% (0.5754) | 82.71% (0.5071) |
+| Fine-Tuning | 94.15% (0.1898) | 94.41% (0.1787) |
 
----
 
 ##### Data Augmentation
 
-| Augmentation | Loss | Accuracy |
-|--------------|------|----------|
-| No Augmentation | 0.1898 | 94.15% |
-| RandomCrop + Flip | 0.1913 | 93.75% |
-| No Augmentation (epochs = 10) | 0.2296 | 93.64% |
-| RandomCrop + Flip (epochs = 10) | 0.2027 | 94.32% |
+| Augmentation | ResNet18 | ResNet50 |
+|--------------|-----------|-----------|
+| No Augmentation (10 epochs) | 93.64% (0.2296) | 93.72% (0.2306) |
+| RandomCrop + Flip (10 epochs) | 94.32% (0.2027) | 93.88% (0.2149) |
 
----
 
-##### Optimizer Comparison
+##### Optimizer (Adam vs SGD)
 
-| Optimizer | Loss | Accuracy |
-|-----------|------|----------|
-| Adam | 0.1898 | 94.15% |
-| SGD | 0.2772 | 91.78% |
+| Optimizer | ResNet18 | ResNet50 |
+|-----------|-----------|-----------|
+| Adam | 94.15% (0.1898) | 94.41% (0.1787) |
+| SGD | 91.78% (0.2772) | 93.58% (0.2071) |
 
----
 
-##### Scheduler Comparison
+##### Learning Rate Scheduler
 
-| Scheduler | Loss | Accuracy |
-|-----------|------|----------|
-| None | 0.1898 | 94.15% |
-| StepLR | 0.1279 | 95.90% |
-| CosineAnnealingLR | 0.1362 | 95.88% |
+| Scheduler | ResNet18 | ResNet50 |
+|-----------|-----------|-----------|
+| None | 94.15% (0.1898) | 94.41% (0.1787) |
+| StepLR | 95.90% (0.1279) | 96.68% (0.1041) |
+| CosineAnnealingLR | 95.88% (0.1362) | 96.67% (0.1146) |
 
-👉 [View ResNet-18 Notebook](./experiments/resnet18.ipynb)  
+
+👉 [View ResNet-18 Notebook](./experiments/resnet18.ipynb)
+👉 [View ResNet-50 Notebook](./experiments/resnet50.ipynb)  
 👉 [View Detailed Analysis](./docs/experiment_log.md)
 
 ---
