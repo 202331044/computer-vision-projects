@@ -1,6 +1,6 @@
 # 03 CIFAR-10 Transfer Learning
 
-Transfer learning experiments on CIFAR-10 using a pretrained ResNet-18 model.
+Transfer learning experiments on CIFAR-10 using a pretrained ResNet-18 and ResNet-50 models.
 
 ## 📚 Core Concepts
 
@@ -64,6 +64,10 @@ Transfer learning experiments on CIFAR-10 using a pretrained ResNet-18 model.
 
 ### ResNet-18 and ResNet-50
 
+- ResNet introduces skip connections (residual connections) to improve gradient flow and enable the training of very deep neural networks.
+- Implemented ResNet-18 and ResNet-50 from scratch and verified training on CIFAR-10.
+- Used pretrained PyTorch ResNet models for transfer learning experiments and performance comparison.
+
 #### Training Setup
 
 - Pretrained: ImageNet
@@ -118,5 +122,24 @@ Transfer learning experiments on CIFAR-10 using a pretrained ResNet-18 model.
 👉 [View ResNet-18 Notebook](./experiments/resnet18.ipynb)
 👉 [View ResNet-50 Notebook](./experiments/resnet50.ipynb)  
 👉 [View Detailed Analysis](./docs/experiment_log.md)
+
+---
+
+### MobileNetV2
+
+- MobileNetV2 uses depthwise separable convolutions (depthwise and pointwise convolutions) to reduce computational cost and the number of parameters.
+- It introduces inverted residual blocks with linear bottlenecks to improve efficiency while preserving information.
+- Implemented MobileNetV2 from scratch.
+- Trained and evaluated the model on CIFAR-10.
+
+#### Training Setup
+
+- Epochs: 5 and 10
+- Batch size: 32
+- Optimizer: Adam
+- Learning rate: 1e-3
+- Loss function: CrossEntropyLoss
+
+👉 [View MobileNetV2 Notebook](./experiments/mobilenetv2.ipynb)
 
 ---

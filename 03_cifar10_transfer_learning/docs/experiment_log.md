@@ -7,14 +7,14 @@
 Freeze settings:
 - Learning rate: 1e-3
 
-### 📊 Performance Comparison
+### Performance Comparison
 
 | Method | Loss | Accuracy |
 |--------|------|----------|
 | Freeze | 0.5754 | 80.75% |
 | Fine-Tuning | 0.1898 | 94.15% |
 
-### 📉 Analysis
+### Analysis
 
 In the freeze setting, only the fully connected (FC) layer is trainable, while in fine-tuning the entire model is trainable.
 
@@ -25,7 +25,7 @@ In the freeze setting, only the fully connected (FC) layer is trainable, while i
 
 ## 2. Data Augmentation
 
-### 📊 Performance Comparison
+### Performance Comparison
 
 | Augmentation | Loss | Accuracy |
 |--------------|------|----------|
@@ -34,7 +34,7 @@ In the freeze setting, only the fully connected (FC) layer is trainable, while i
 | No Augmentation (epochs = 10) | 0.2296 | 93.64% |
 | RandomCrop + Flip (epochs = 10) | 0.2027 | 94.32% |
 
-### 📉 Analysis
+### Analysis
 
 Data augmentation (RandomCrop and RandomHorizontalFlip) was applied and compared with the baseline setting without augmentation.
 
@@ -53,14 +53,14 @@ SGD settings:
 - Learning rate: 1e-2
 - Momentum: 0.9
 
-### 📊 Performance Comparison
+### Performance Comparison
 
 | Optimizer | Loss | Accuracy |
 |-----------|------|----------|
 | Adam | 0.1898 | 94.15% |
 | SGD | 0.2772 | 91.78% |
 
-### 📉 Analysis
+### Analysis
 
 The experimental results of Adam and SGD were compared.
 
@@ -71,7 +71,7 @@ The experimental results of Adam and SGD were compared.
 
 ## 4. Learning Rate Scheduler
 
-### 📊 Performance Comparison
+### Performance Comparison
 
 | Scheduler | Loss | Accuracy |
 |-----------|------|----------|
@@ -79,7 +79,7 @@ The experimental results of Adam and SGD were compared.
 | StepLR | 0.1279 | 95.90% |
 | CosineAnnealingLR | 0.1362 | 95.88% |
 
-### 📉 Analysis
+### Analysis
 
 The performances of the baseline model, StepLR, and CosineAnnealingLR were compared.
 
@@ -98,14 +98,14 @@ The performances of the baseline model, StepLR, and CosineAnnealingLR were compa
 Freeze settings:
 - Learning rate: 1e-3
 
-### 📊 Performance Comparison
+### Performance Comparison
 
 | Method | Loss | Accuracy |
 |--------|------|----------|
 | Freeze | 0.5071 | 82.71% |
 | Fine-Tuning | 0.1787 | 94.41% |
 
-### 📉 Analysis
+### Analysis
 
 Similar to the ResNet18 experiment, fine-tuning achieved better performance, while the freeze setting required less training time.
 
@@ -120,14 +120,14 @@ Similar to the ResNet18 experiment, fine-tuning achieved better performance, whi
 
 ## 2. Data Augmentation
 
-### 📊 Performance Comparison
+### Performance Comparison
 
 | Augmentation | Loss | Accuracy |
 |--------------|------|----------|
 | No Augmentation (epochs = 10) | 0.2306 | 93.72% |
 | RandomCrop + Flip (epochs = 10) | 0.2149 | 93.88% |
 
-### 📉 Analysis
+### Analysis
 
 With data augmentation applied, the model achieved slightly better performance than the non-augmented setting under 10 epochs.
 
@@ -148,14 +148,14 @@ SGD settings:
 - Learning rate: 1e-2
 - Momentum: 0.9
 
-### 📊 Performance Comparison
+### Performance Comparison
 
 | Optimizer | Loss | Accuracy |
 |-----------|------|----------|
 | Adam | 0.1787 | 94.41% |
 | SGD | 0.2071 | 93.58% |
 
-### 📉 Analysis
+### Analysis
 
 Similar to the ResNet18 experiment, Adam achieved better performance than SGD in the ResNet50 experiment.
 
@@ -167,7 +167,7 @@ Similar to the ResNet18 experiment, Adam achieved better performance than SGD in
 
 ## 4. Learning Rate Scheduler
 
-### 📊 Performance Comparison
+### Performance Comparison
 
 | Scheduler | Loss | Accuracy |
 |-----------|------|----------|
@@ -175,7 +175,7 @@ Similar to the ResNet18 experiment, Adam achieved better performance than SGD in
 | StepLR | 0.1041 | 96.68% |
 | CosineAnnealingLR | 0.1146 | 96.67% |
 
-### 📉 Analysis
+### Analysis
 
 Similar to the ResNet18 experiment, the performance ranking was:
   StepLR > CosineAnnealingLR > No Scheduler, indicating that applying a learning rate scheduler effectively improved model performance.
