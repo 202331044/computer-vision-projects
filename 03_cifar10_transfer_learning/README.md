@@ -131,15 +131,31 @@ Transfer learning experiments on CIFAR-10 using a pretrained ResNet-18 and ResNe
 - It introduces inverted residual blocks with linear bottlenecks to improve efficiency while preserving information.
 - Implemented MobileNetV2 from scratch.
 - Trained and evaluated the model on CIFAR-10.
+- Conducted transfer learning experiments using pretrained PyTorch MobileNetV2 models.
 
 #### Training Setup
 
-- Epochs: 5 and 10
+- Pretrained: ImageNet
+- Epochs: 5
 - Batch size: 32
 - Optimizer: Adam
 - Learning rate: 1e-3
 - Loss function: CrossEntropyLoss
 
+#### Comparison
+
+- Feature Extraction (Freeze) vs Fine-Tuning
+
+#### Results
+
+##### Feature Extraction vs Fine-Tuning
+
+| Method | MobileNetV2 |
+|--------|-------------|
+| Freeze | 78.05% (0.6458) |
+| Fine-Tuning | 93.16% (0.2330)|
+
 👉 [View MobileNetV2 Notebook](./experiments/mobilenetv2.ipynb)
+👉 [View Detailed Analysis](./docs/experiment_log.md)
 
 ---

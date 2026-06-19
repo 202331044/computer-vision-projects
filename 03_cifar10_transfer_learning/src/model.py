@@ -279,8 +279,8 @@ class ResNet18CIFAR(nn.Module):
 class Bottleneck2(nn.Module):
     def __init__(self, input, output, t, s):
         super().__init__()
-        self.expand = (t != 1)
 
+        self.expand = (t != 1)
         self.use_residual = (input == output and s == 1)
         
         if self.expand:
@@ -329,10 +329,11 @@ class Bottleneck2(nn.Module):
         return x
 
 class MobileNetV2(nn.Module):
-    def __init__(self, num_classes = 1000, cifar = False):
+    def __init__(self, num_classes = 10, cifar = False):
         super().__init__()
 
         first_stride = 1 if cifar else 2
+        #first_stride = 2
 
         self.conv1 = nn.Conv2d(3, 32, 
                                kernel_size = 3, 
@@ -355,7 +356,7 @@ class MobileNetV2(nn.Module):
 
         self.avgpool = nn.AdaptiveAvgPool2d((1,1))
         self.dropout = nn.Dropout(0.2)
-        self.classifier = nn.Linear(1280, num_classes)
+        self.fc = nn.Linear(1280, num_classes)
 
     def _make_layers(self, input, output, t, s, n):
         layers = []
@@ -386,6 +387,6 @@ class MobileNetV2(nn.Module):
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
         x = self.dropout(x)
-        x = self.classifier(x)
+        x = self.fc(x)
 
         return x

@@ -32,16 +32,18 @@ def get_augmentation():
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
         transforms.Normalize( mean=[0.485, 0.456, 0.406],
-                                std=[0.229, 0.224, 0.225])
+                              std=[0.229, 0.224, 0.225])
     ])
     
     return aug_transform
 
 
 MODEL_DICT = {'resnet18': lambda: models.resnet18(weights = 'IMAGENET1K_V1'),
-                'resnet50': lambda: models.resnet50(weights = 'IMAGENET1K_V1'),
-                'resnet18_manual': lambda: md.ResNet18CIFAR(),
-                'resnet50_manual': lambda: md.ResNet50CIFAR()}
+               'resnet50': lambda: models.resnet50(weights = 'IMAGENET1K_V1'),
+               'resnet18_manual': lambda: md.ResNet18CIFAR(),
+               'resnet50_manual': lambda: md.ResNet50CIFAR(),
+               'mobilenetv2_manual' : lambda : md.MobileNetV2(num_classes = 10, cifar = True),
+               'mobilenetv2': lambda : models.mobilenet_v2(weights = models.MobileNet_V2_Weights.DEFAULT)}
     
 def get_model(model_name):
     if model_name not in MODEL_DICT:

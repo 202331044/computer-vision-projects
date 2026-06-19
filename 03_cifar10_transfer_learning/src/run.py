@@ -10,7 +10,7 @@ import train as tr
 import model as md
 import utils as ut
 
-def run(mode, model_name, is_aug, opt, scheduler_name, epochs, lr):
+def run(mode, model_name, is_aug, opt, scheduler_name, epochs, lr, is_resize):
 
     ut.set_seed(42)
 
@@ -18,11 +18,14 @@ def run(mode, model_name, is_aug, opt, scheduler_name, epochs, lr):
         aug_transform = ut.get_augmentation()
     
     if mode == 'manual':
-        transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
-                                 std=[0.2470, 0.2435, 0.2616])
-            ])
+        transform = []
+        if is_resize:
+            transform.append(transforms.Resize((224, 224)))
+
+        transform.extend([ transforms.ToTensor(),
+                           transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
+                                                std=[0.2470, 0.2435, 0.2616])])
+        transform = transforms.Compose(transform)
     else:
         transform = transforms.Compose([
             transforms.Resize((224, 224)),
@@ -59,13 +62,19 @@ def run(mode, model_name, is_aug, opt, scheduler_name, epochs, lr):
         for p in model.parameters():
             p.requires_grad = False
 
-    model.fc = nn.Linear(model.fc.in_features, 10)
+    #for resnet, manual model
+    #model.fc = nn.Linear(model.fc.in_features, 10)
+    #mobilenet
+    model.classifier[1] = nn.Linear(model.last_channel, 10)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
 
     if mode == 'freeze':
-        optimizer = ut.get_optimizer(model.fc.parameters(), opt, lr)
+        #resnet, manual
+        #optimizer = ut.get_optimizer(model.fc.parameters(), opt, lr)
+        #mobilenet
+        optimizer = ut.get_optimizer(model.classifier.parameters(), opt, lr)
     else:
         optimizer = ut.get_optimizer(model.parameters(), opt, lr)
 
@@ -89,7 +98,9 @@ if __name__ == '__main__':
     parser.add_argument('--mode', type = str, default = 'freeze', 
                         choices = ['freeze', 'finetune', 'manual'])
     parser.add_argument('--model', type = str, default = 'resnet18',
-                        choices = ['resnet18', 'resnet50', 'resnet18_manual', 'resnet50_manual'])
+                        choices = ['resnet18', 'resnet50', 'resnet18_manual', 
+                        'resnet50_manual', 'mobilenetv2_manual',
+                        'mobilenetv2'])
     parser.add_argument('--augmentation', action = 'store_true')
     parser.add_argument('--optimizer', type = str, default = 'adam',
                         choices = ['adam', 'sgd'])
@@ -97,8 +108,9 @@ if __name__ == '__main__':
                         choices = ['none', 'steplr', 'cosinelr'])
     parser.add_argument('--epochs', type = int, default = 5)
     parser.add_argument('--lr', type = float, default = 1e-3)
+    parser.add_argument('--resize', action = 'store_true')
 
     args = parser.parse_args()
 
     run(args.mode, args.model, args.augmentation, args.optimizer, 
-        args.scheduler, args.epochs, args.lr)
+        args.scheduler, args.epochs, args.lr, args.resize)

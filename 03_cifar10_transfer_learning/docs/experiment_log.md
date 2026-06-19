@@ -187,3 +187,23 @@ Similar to the ResNet18 experiment, the performance ranking was:
 - These results suggest that learning rate scheduling contributed to more stable optimization and better generalization performance in both ResNet18 and ResNet50 experiments.
 
 ---
+
+# MobileNetV2
+
+## 1. Feature Extractor (Freeze) vs Fine-Tuning
+
+Fine-Tuning settings:
+- Learning rate: 1e-4
+
+### Performance Comparison
+
+| Method | Loss | Accuracy |
+|--------|------|----------|
+| Freeze | 0.6458 | 78.05% |
+| Fine-Tuning  | 0.2330 | 93.16% |
+
+### Analysis
+
+- Similar to other models, fine-tuning achieved better performance than feature extraction.
+
+- Updating all network parameters enabled the model to learn dataset-specific features, improving accuracy from 78.05% to 93.16%.
