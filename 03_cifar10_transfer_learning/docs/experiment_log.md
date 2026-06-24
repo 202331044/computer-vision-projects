@@ -207,3 +207,25 @@ Fine-Tuning settings:
 - Similar to other models, fine-tuning achieved better performance than feature extraction.
 
 - Updating all network parameters enabled the model to learn dataset-specific features, improving accuracy from 78.05% to 93.16%.
+
+---
+
+# EfficientNet
+
+## 1. Feature Extractor (Freeze) vs Fine-Tuning
+
+Fine-Tuning settings:
+- Learning rate: 1e-4
+
+### Performance Comparison
+
+| Method | Loss | Accuracy |
+|--------|------|----------|
+| Freeze | 0.5631 | 80.73% |
+| Fine-Tuning | 0.1214 | 96.57% | 
+
+### Analysis
+
+- Similar to other models, fine-tuning achieved better performance than feature extraction.
+
+- Updating all network parameters enabled the model to learn dataset-specific features, improving accuracy from 80.73% to 96.57%.

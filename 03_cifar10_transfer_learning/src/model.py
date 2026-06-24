@@ -390,3 +390,136 @@ class MobileNetV2(nn.Module):
         x = self.fc(x)
 
         return x
+    
+
+class _SELayer(nn.Module):
+    def __init__(self, channel, reduction):
+        super().__init__()
+        reduced_channel = max(1, channel // reduction)
+        self.pool = nn.AdaptiveAvgPool2d(1)
+        self.fc1 = nn.Linear(channel, reduced_channel, bias = False)
+        self.act = nn.SiLU(inplace = True)
+        self.fc2 = nn.Linear(reduced_channel, channel, bias = False)
+        self.gating = nn.Sigmoid()
+
+    def forward(self, x):
+        b, c, _, _ = x.size()
+
+        out = self.pool(x).flatten(1)
+        out = self.fc1(out)
+        out = self.act(out)
+        out = self.fc2(out)
+        out = self.gating(out)
+
+        return x * out.view(b, c, 1, 1)
+
+
+class SELayer(nn.Module):
+    def __init__(self, channel, reduction):
+        super().__init__()
+        reduced_channel = max(1, int(channel * reduction))
+        self.pool = nn.AdaptiveAvgPool2d(1)
+        self.conv1 = nn.Conv2d(channel, reduced_channel, kernel_size = 1, bias = False)
+        self.act = nn.SiLU(inplace = True)
+        self.conv2 = nn.Conv2d(reduced_channel, channel, kernel_size = 1, bias = False)
+        self.gating = nn.Sigmoid()
+
+    def forward(self, x):
+        out = self.pool(x)
+        out = self.conv1(out)
+        out = self.act(out)
+        out = self.conv2(out)
+        out = self.gating(out)
+
+        return x * out
+    
+class MBConvBlock(nn.Module):
+    def __init__(self, in_channel, out_channel, kernel, stride, expand, reduction):
+        super().__init__()
+
+        self.expansion = (expand != 1)
+        self.hidden_dim = in_channel * expand
+        self.use_residual = (in_channel == out_channel and stride == 1)
+
+        if self.expansion:
+            self.conv1 = nn.Conv2d(in_channel, self.hidden_dim, kernel_size = 1, bias = False)
+            self.bn1 = nn.BatchNorm2d(self.hidden_dim)
+        
+        self.act = nn.SiLU(inplace = True)
+        
+        self.conv2 = nn.Conv2d(self.hidden_dim, self.hidden_dim,
+                              kernel_size = kernel, padding = kernel // 2, stride = stride,
+                              groups = self.hidden_dim, bias = False)
+        self.bn2 = nn.BatchNorm2d(self.hidden_dim)
+
+        self.se = SELayer(self.hidden_dim, reduction)
+        
+        self.conv3 = nn.Conv2d(self.hidden_dim, out_channel, kernel_size = 1, bias = False)
+        self.bn3 = nn.BatchNorm2d(out_channel)
+    
+    def forward(self, x):
+        out = x
+
+        if self.expansion:
+            out = self.conv1(out)
+            out = self.bn1(out)
+            out = self.act(out)
+        
+        out = self.conv2(out)
+        out = self.bn2(out)
+        out = self.act(out)
+
+        out = self.se(out)
+
+        out = self.conv3(out)
+        out = self.bn3(out)
+
+        if self.use_residual:
+            out = out + x
+
+        return out
+    
+
+class EfficientNet(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        reduction = 0.25
+        self.stem = nn.Sequential(nn.Conv2d(3, 32, kernel_size = 3, stride = 2, padding = 1, bias = False),
+                                   nn.BatchNorm2d(32),
+                                   nn.SiLU(inplace = True))
+
+        self.stage1 = self._make_layers(32, 16, 3, 1, 1, reduction, 1)
+        self.stage2 = self._make_layers(16, 24, 3, 2, 6, reduction, 2)
+        self.stage3 = self._make_layers(24, 40, 5, 2, 6, reduction, 2)
+        self.stage4 = self._make_layers(40, 80, 3, 2, 6, reduction, 3)
+        self.stage5 = self._make_layers(80, 112, 5, 1, 6, reduction, 3)
+        self.stage6 = self._make_layers(112, 192, 5, 2, 6, reduction, 4)
+        self.stage7 = self._make_layers(192, 320, 3, 1, 6, reduction, 1)
+        
+        self.classifier = nn.Sequential(nn.Conv2d(320, 1280, kernel_size = 1, bias = False),
+                                   nn.BatchNorm2d(1280),
+                                   nn.SiLU(inplace = True),
+                                   nn.AdaptiveAvgPool2d(1),
+                                   nn.Flatten(1),
+                                   nn.Linear(1280, num_classes))
+
+    def _make_layers(self, in_channel, out_channel, kernel, stride, expand, reduction, n):
+        layers = [(MBConvBlock(in_channel, out_channel, kernel, stride, expand, reduction))]
+        for _ in range(n - 1):
+            layers.append(MBConvBlock(out_channel, out_channel, kernel, 1, expand, reduction))
+
+        return nn.Sequential(*layers)
+    
+    def forward(self, x):
+        out = self.stem(x)
+        out = self.stage1(out)
+        out = self.stage2(out)
+        out = self.stage3(out)
+        out = self.stage4(out)
+        out = self.stage5(out)
+        out = self.stage6(out)
+        out = self.stage7(out)
+
+        out = self.classifier(out)
+
+        return out

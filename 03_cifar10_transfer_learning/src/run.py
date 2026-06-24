@@ -62,10 +62,13 @@ def run(mode, model_name, is_aug, opt, scheduler_name, epochs, lr, is_resize):
         for p in model.parameters():
             p.requires_grad = False
 
-    #for resnet, manual model
-    #model.fc = nn.Linear(model.fc.in_features, 10)
-    #mobilenet
-    model.classifier[1] = nn.Linear(model.last_channel, 10)
+
+    if mode != 'manual':
+        #resnet
+        #model.fc = nn.Linear(model.fc.in_features, 10)
+        
+        #mobilenet, efficientnet
+        model.classifier[1] = nn.Linear(model.classifier[1].in_features, 10)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
@@ -100,7 +103,8 @@ if __name__ == '__main__':
     parser.add_argument('--model', type = str, default = 'resnet18',
                         choices = ['resnet18', 'resnet50', 'resnet18_manual', 
                         'resnet50_manual', 'mobilenetv2_manual',
-                        'mobilenetv2'])
+                        'mobilenetv2', 'efficientnet_manual',
+                        'efficientnet'])
     parser.add_argument('--augmentation', action = 'store_true')
     parser.add_argument('--optimizer', type = str, default = 'adam',
                         choices = ['adam', 'sgd'])

@@ -43,7 +43,9 @@ MODEL_DICT = {'resnet18': lambda: models.resnet18(weights = 'IMAGENET1K_V1'),
                'resnet18_manual': lambda: md.ResNet18CIFAR(),
                'resnet50_manual': lambda: md.ResNet50CIFAR(),
                'mobilenetv2_manual' : lambda : md.MobileNetV2(num_classes = 10, cifar = True),
-               'mobilenetv2': lambda : models.mobilenet_v2(weights = models.MobileNet_V2_Weights.DEFAULT)}
+               'mobilenetv2': lambda : models.mobilenet_v2(weights = models.MobileNet_V2_Weights.DEFAULT),
+               'efficientnet_manual' : lambda : md.EfficientNet(num_classes = 10),
+               'efficientnet': lambda : models.efficientnet_b0(weights = models.EfficientNet_B0_Weights.DEFAULT)}
     
 def get_model(model_name):
     if model_name not in MODEL_DICT:

@@ -159,3 +159,38 @@ Transfer learning experiments on CIFAR-10 using a pretrained ResNet-18 and ResNe
 👉 [View Detailed Analysis](./docs/experiment_log.md)
 
 ---
+
+### EfficientNet
+
+- EfficientNet introduces compound scaling, which balances network depth, width, and input resolution to achieve better accuracy–efficiency trade-offs.
+- Implemented an EfficientNet-B0 style model from scratch based on the EfficientNet architecture.
+- Implemented MBConv blocks with squeeze-and-excitation (SE) modules to emphasize informative feature channels and suppress less useful ones.
+- Trained and evaluated the model on CIFAR-10.
+- Conducted transfer learning experiments using pretrained PyTorch EfficientNet-B0 models.
+
+#### Training Setup
+
+- Pretrained: ImageNet
+- Epochs: 5
+- Batch size: 32
+- Optimizer: Adam
+- Learning rate: 1e-3
+- Loss function: CrossEntropyLoss
+
+#### Comparison
+
+- Feature Extraction (Freeze) vs Fine-Tuning
+
+#### Results
+
+##### Feature Extraction vs Fine-Tuning
+
+| Method | EfficientNet-B0 |
+|--------|-------------|
+| Freeze | 80.73% (0.5631) |
+| Fine-Tuning | 96.57% (0.1214)|
+
+👉 [View EfficientNet Notebook](./experiments/efficientnet.ipynb)
+👉 [View Detailed Analysis](./docs/experiment_log.md)
+
+---
