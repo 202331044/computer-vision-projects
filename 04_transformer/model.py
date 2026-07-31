@@ -23,6 +23,48 @@ class SelfAttention(nn.Module):
         output = weight @ v
         return output
 
+# class CrossAttention(nn.Module):
+#     def __init__(self, num_heads, d_model):
+#         super().__init__()
+#         assert d_model % num_heads == 0 , ('d_model must divided by num_heads')
+
+#         self.wq = nn.Linear(d_model, d_model)
+#         self.wk = nn.Linear(d_model, d_model)
+#         self.wv = nn.Linear(d_model, d_model)
+#         self.wo = nn.Linear(d_model, d_model)
+
+#         self.num_heads = num_heads
+#         self.head_dim = d_model // num_heads
+        
+#     def forward(self, x, memory):
+#         batch, target_len = x.shape[:2]
+#         source_len = memory.size(1)
+
+#         q = self.wq(x)
+#         k = self.wk(memory)
+#         v = self.wv(memory)
+
+#         q = q.reshape(batch, target_len, self.num_heads, self.head_dim)
+#         k = k.reshape(batch, source_len, self.num_heads, self.head_dim)
+#         v = v.reshape(batch, source_len, self.num_heads, self.head_dim)
+
+#         q = q.transpose(1, 2)
+#         k = k.transpose(1, 2)
+#         v = v.transpose(1, 2)
+
+#         score = q @ k.transpose(-2, -1)
+#         score = score / math.sqrt(self.head_dim)
+#         weight = torch.softmax(score, dim = -1)
+#         out = weight @ v
+
+#         out = out.transpose(1, 2).contiguous()
+
+#         out = out.reshape(batch, target_len, self.num_heads * self.head_dim)
+
+#         out = self.wo(out)
+
+#         return out
+
 class MultiHeadAttention(nn.Module):
     def __init__(self, num_heads, d_model):
         super().__init__()
@@ -36,16 +78,17 @@ class MultiHeadAttention(nn.Module):
         self.wv = nn.Linear(d_model, d_model)
         self.wo = nn.Linear(d_model, d_model)
 
-    def forward(self, x, mask = False):
-        batch, seq_len = x.size(0), x.size(1)
+    def forward(self, query, key, value, attn_mask = None, key_padding_mask = None):
+        batch, tgt_len = query.shape[:2]
+        src_len = key.shape[1]
+        
+        q = self.wq(query)
+        k = self.wk(key)
+        v = self.wv(value)
 
-        q = self.wq(x)
-        k = self.wk(x)
-        v = self.wv(x)
-
-        q = q.reshape(batch, seq_len, self.num_heads, self.head_dim)
-        k = k.reshape(batch, seq_len, self.num_heads, self.head_dim)
-        v = v.reshape(batch, seq_len, self.num_heads, self.head_dim)
+        q = q.reshape(batch, tgt_len, self.num_heads, self.head_dim)
+        k = k.reshape(batch, src_len, self.num_heads, self.head_dim)
+        v = v.reshape(batch, src_len, self.num_heads, self.head_dim)
 
         q = q.transpose(1, 2)
         k = k.transpose(1, 2)
@@ -54,17 +97,21 @@ class MultiHeadAttention(nn.Module):
         score = q @ k.transpose(-2, -1)
         score = score / math.sqrt(self.head_dim)
 
-        if mask:
-            causal_mask = torch.triu(torch.ones(seq_len, seq_len, device = x.device), 
-            diagonal = 1)
-            score = score.masked_fill(causal_mask == 1, float('-inf'))
+        if key_padding_mask is not None:
+            key_padding_mask = (key_padding_mask
+                                .unsqueeze(1)
+                                .unsqueeze(2))
+            score = score.masked_fill(key_padding_mask, float('-inf'))
+
+        if attn_mask is not None:
+            score = score.masked_fill(attn_mask, float('-inf'))
 
         weight = torch.softmax(score, dim = -1)
 
         out = weight @ v
 
         out = out.transpose(1, 2).contiguous()
-        out = out.reshape(batch, seq_len, self.num_heads * self.head_dim)
+        out = out.reshape(batch, tgt_len, self.num_heads * self.head_dim)
 
         out = self.wo(out)
 
@@ -123,22 +170,24 @@ class EncoderLayer(nn.Module):
         self.norm1 = nn.LayerNorm(d_model)
 
         self.ffn = nn.Sequential(nn.Linear(d_model, d_ff),
-                                  nn.ReLU(),
+                                  nn.GELU(),
                                   nn.Linear(d_ff, d_model))
         self.norm2 = nn.LayerNorm(d_model)
     
-    def forward(self, x):
-        out = self.attention(x)
-        out = self.dropout(out)
-        out = out + x
-        out = self.norm1(out)
+    def forward(self, x, src_padding_mask = None):
+        residual = x
+        x = self.norm1(x)
+        x = self.attention(x, x, x, key_padding_mask = src_padding_mask)
+        x = self.dropout(x)
+        x = x + residual
         
-        out2 = self.ffn(out)
-        out2 = self.dropout(out2)
-        out2 = out2 + out
-        out2 = self.norm2(out2)
+        residual = x
+        x = self.norm2(x)
+        x = self.ffn(x)
+        x = self.dropout(x)
+        x = x + residual
 
-        return out2
+        return x
     
 class TransformerEncoder(nn.Module):
     def __init__(self, vocab_size, d_model, max_len, N, num_heads, d_ff):
@@ -149,57 +198,16 @@ class TransformerEncoder(nn.Module):
         self.position = PositionEncoding(max_len, d_model)
         self.layers = nn.ModuleList([ EncoderLayer(num_heads, d_model, d_ff)
                                      for _ in range(N)])
-    def forward(self, x):
+    def forward(self, x, src_padding_mask = None):
         out = self.embedding(x) * math.sqrt(self.d_model)
         out = self.position(out)
         out = self.dropout(out)
 
         for layer in self.layers:
-            out = layer(out)
+            out = layer(out, src_padding_mask)
         
         return out
 
-class CrossAttention(nn.Module):
-    def __init__(self, num_heads, d_model):
-        super().__init__()
-        assert d_model % num_heads == 0 , ('d_model must divided by num_heads')
-
-        self.wq = nn.Linear(d_model, d_model)
-        self.wk = nn.Linear(d_model, d_model)
-        self.wv = nn.Linear(d_model, d_model)
-        self.wo = nn.Linear(d_model, d_model)
-
-        self.num_heads = num_heads
-        self.head_dim = d_model // num_heads
-        
-    def forward(self, x, memory):
-        batch, target_len = x.shape[:2]
-        source_len = memory.size(1)
-
-        q = self.wq(x)
-        k = self.wk(memory)
-        v = self.wv(memory)
-
-        q = q.reshape(batch, target_len, self.num_heads, self.head_dim)
-        k = k.reshape(batch, source_len, self.num_heads, self.head_dim)
-        v = v.reshape(batch, source_len, self.num_heads, self.head_dim)
-
-        q = q.transpose(1, 2)
-        k = k.transpose(1, 2)
-        v = v.transpose(1, 2)
-
-        score = q @ k.transpose(-2, -1)
-        score = score / math.sqrt(self.head_dim)
-        weight = torch.softmax(score, dim = -1)
-        out = weight @ v
-
-        out = out.transpose(1, 2).contiguous()
-
-        out = out.reshape(batch, target_len, self.num_heads * self.head_dim)
-
-        out = self.wo(out)
-
-        return out
 
 class DecoderLayer(nn.Module):
     def __init__(self, num_heads, d_model, d_ff):
@@ -208,28 +216,39 @@ class DecoderLayer(nn.Module):
         self.dropout = nn.Dropout(0.1)
         self.norm1 = nn.LayerNorm(d_model)
 
-        self.attn2 = CrossAttention(num_heads, d_model)
+        self.attn2 = MultiHeadAttention(num_heads, d_model)
         self.norm2 = nn.LayerNorm(d_model)
 
         self.ffn = nn.Sequential(nn.Linear(d_model, d_ff),
-                                 nn.ReLU(),
+                                 nn.GELU(),
                                  nn.Linear(d_ff, d_model))
         self.norm3 = nn.LayerNorm(d_model)
 
-    def forward(self, x, memory):
-        out = self.attn(x, mask = True)
-        out = self.dropout(out)
-        out = self.norm1(out + x)
+    def forward(self, x, memory, src_padding_mask = None, 
+                                 tgt_padding_mask = None, 
+                                 causal_mask = None):
+
+        residual = x
+        x = self.norm1(x)                       
+        x = self.attn(x, x, x, 
+                        key_padding_mask = tgt_padding_mask,
+                        attn_mask = causal_mask)
+        x = self.dropout(x)
+        x = x + residual
         
-        out2 = self.attn2(out, memory)
-        out2 = self.dropout(out2)
-        out2 = self.norm2(out2 + out)
+        residual = x
+        x = self.norm2(x)
+        x = self.attn2(x, memory, memory, key_padding_mask = src_padding_mask)
+        x = self.dropout(x)
+        x = x + residual
 
-        out3 = self.ffn(out2)
-        out3 = self.dropout(out3)
-        out3 = self.norm3(out3 + out2)
+        residual = x
+        x = self.norm3(x)
+        x = self.ffn(x)
+        x = self.dropout(x)
+        x = x + residual
 
-        return out3
+        return x
 
 class TransformerDecoder(nn.Module):
     def __init__(self, N, vocab_size, d_model, max_len, num_heads, d_ff):
@@ -240,13 +259,13 @@ class TransformerDecoder(nn.Module):
         self.dropout = nn.Dropout(0.1)
         self.layers = nn.ModuleList([DecoderLayer(num_heads, d_model, d_ff) for _ in range(N)])
 
-    def forward(self, x, memory):
+    def forward(self, x, memory, src_padding_mask = None, tgt_padding_mask = None, causal_mask = None):
         x = self.embedding(x) * math.sqrt(self.d_model)
         x = self.position(x)
         x = self.dropout(x)
 
         for layer in self.layers:
-            x = layer(x, memory)
+            x = layer(x, memory, src_padding_mask, tgt_padding_mask, causal_mask)
         
         return x
 
@@ -277,9 +296,14 @@ class Transformer(nn.Module):
                                           d_ff)
         self.fc = nn.Linear(d_model, tgt_vocab_size)
     
-    def forward(self, src, tgt):
-        memory = self.encoder(src)
-        out = self.decoder(tgt, memory)
+    def forward(self, src, tgt, src_padding_mask = None, 
+                                tgt_padding_mask = None,
+                                causal_mask = None):
+        memory = self.encoder(src, src_padding_mask)
+        out = self.decoder(tgt, memory, 
+                                src_padding_mask, 
+                                tgt_padding_mask,
+                                causal_mask)
         out = self.fc(out)
 
         return out
