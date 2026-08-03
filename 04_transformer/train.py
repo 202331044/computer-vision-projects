@@ -31,3 +31,9 @@ def train(epochs,
 
             print(f"---------epoch: {epoch + 1}---------")
             print(f"loss: {loss.item() :.4f} accuracy: {correct / total :.2f}")
+
+def inference(model, src, max_len, BOS_ID, EOS_ID):
+
+    return model.generate(src, max_len, BOS_ID, EOS_ID)
+
+

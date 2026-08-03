@@ -2,6 +2,10 @@ import torch.nn as nn
 import torch
 import math
 
+PAD_ID = 0
+BOS_ID = 1
+EOS_ID = 2
+
 class SelfAttention(nn.Module):
     def __init__(self, d_model, d_k):
         super().__init__()
@@ -294,6 +298,7 @@ class Transformer(nn.Module):
                                           tgt_len,
                                           num_heads,
                                           d_ff)
+
         self.fc = nn.Linear(d_model, tgt_vocab_size)
     
     def forward(self, src, tgt, src_padding_mask = None, 
@@ -307,3 +312,30 @@ class Transformer(nn.Module):
         out = self.fc(out)
 
         return out
+
+
+    def generate(self, src, max_len, BOS_ID, EOS_ID):
+
+        self.eval()
+
+        with torch.no_grad():
+            memory = self.encoder(src)
+            batch_size = src.size(0)
+            tgt = torch.full((batch_size, 1), 
+                              BOS_ID, 
+                              dtype = torch.long, 
+                              device = src.device)
+            
+            for _ in range(max_len):
+                out = self.decoder(tgt, memory)
+                out = self.fc(out)
+
+                prob = out[:, -1 , :]
+                next_token = prob.argmax(dim = -1)
+                next_token = next_token.unsqueeze(1)
+                tgt = torch.cat([tgt, next_token], dim = 1)
+
+                if (next_token == EOS_ID).all():
+                    break
+            
+            return tgt

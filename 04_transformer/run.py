@@ -31,13 +31,13 @@ def run(epochs, lr):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    src = ["나는", "밥을", "먹는다", "<EOS>"]
-    tgt = ["<BOS>", "I", "eat", "rice"]
-    label = ["I", "eat", "rice", "<EOS>"]
+    str_src = ["나는", "밥을", "먹는다", "<EOS>"]
+    str_tgt = ["<BOS>", "I", "eat", "rice"]
+    str_label = ["I", "eat", "rice", "<EOS>"]
 
-    src_id = [src_vocab[token] for token in src]
-    tgt_id = [tgt_vocab[token] for token in tgt]
-    label_id = [tgt_vocab[token] for token in label]
+    src_id = [src_vocab[token] for token in str_src]
+    tgt_id = [tgt_vocab[token] for token in str_tgt]
+    label_id = [tgt_vocab[token] for token in str_label]
 
     src = torch.tensor(src_id)
     tgt = torch.tensor(tgt_id)
@@ -94,6 +94,28 @@ def run(epochs, lr):
           tgt_vocab_size, 
           causal_mask,
           PAD_ID)
+
+    max_len = 4
+    result = tr.inference(transformer, src, max_len, BOS_ID, EOS_ID)
+
+    id_to_token = { v: k for k, v in tgt_vocab.items()}
+
+    ids = result[0].cpu().tolist()
+    tokens = []
+
+    for token_id in ids:
+        token = id_to_token[token_id]
+
+        if token == '<EOS>':
+            break
+
+        if token not in ['<BOS>', '<PAD>']:
+            tokens.append(token)
+    
+    print()
+    print(str_src)
+    print(" ".join(tokens))
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
