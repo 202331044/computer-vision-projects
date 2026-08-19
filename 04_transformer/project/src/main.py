@@ -6,8 +6,11 @@ from model import TextTransformer
 from train import train_model
 from datasets import load_dataset
 import torch.nn as nn
+import argparse
+from pathlib import Path
+import visualize as vis
 
-def run():
+def run(epochs):
 
     ag_news = load_dataset('fancyzhx/ag_news', split='train')
     split = ag_news.train_test_split(test_size=0.1,
@@ -52,15 +55,31 @@ def run():
     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10)
 
-    epochs = 10
-    train_model(epochs, 
+    checkpoint_dir = Path("../checkpoints")
+    checkpoint_dir.mkdir(exist_ok=True)
+    checkpoint_path = checkpoint_dir / "best_model.pt"
+
+    history = train_model(epochs, 
                 model, 
                 device, 
                 train_loader, 
                 val_loader, 
                 optimizer, 
                 criterion,
-                scheduler)
+                scheduler,
+                save_path=checkpoint_path)
+                
+    fig_dir = Path("../results")
+    fig_dir.mkdir(exist_ok=True)
+    loss_path = fig_dir / "train_val_loss.png"
+    acc_path = fig_dir / "train_val_acc.png"
+
+    vis.plot_loss(history, loss_path)
+    vis.plot_loss(history, acc_path)
 
 if __name__ == '__main__' :
-    run()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--epochs', type=int, default=5)
+    args = parser.parse_args()
+    run(args.epochs)

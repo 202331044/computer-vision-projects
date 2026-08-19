@@ -1,4 +1,5 @@
 import torch
+import os
 
 def train(model, device, train_loader, optimizer, criterion):
 
@@ -32,7 +33,7 @@ def train(model, device, train_loader, optimizer, criterion):
 
     return train_loss, train_acc
    
-def validation(model, device, val_loader, criterion):
+def validate(model, device, val_loader, criterion):
     model.eval()
 
     with torch.no_grad():
@@ -61,8 +62,14 @@ def validation(model, device, val_loader, criterion):
         return val_loss, val_acc
 
 def train_model(epochs, model, device, train_loader, val_loader, 
-                optimizer, criterion, scheduler):
-
+                optimizer, criterion, scheduler, save_path="checkpoints/best_model.pt"):
+    history = {
+                "train_loss" : [],
+                "train_acc" : [],
+                "val_loss" : [],
+                "val_acc" : []
+              }
+    
     best_val_acc = 0
 
     for epoch in range(epochs):
@@ -72,19 +79,28 @@ def train_model(epochs, model, device, train_loader, val_loader,
                                       optimizer, 
                                       criterion)
 
-        val_loss, val_acc = validation(model, 
+        
+
+        val_loss, val_acc = validate(model, 
                                        device, 
                                        val_loader, 
                                        criterion)
-        
+
+        history['train_loss'].append(train_loss)
+        history['train_acc'].append(train_acc)
+        history['val_loss'].append(val_loss)
+        history['val_acc'].append(val_acc)
+
         scheduler.step()
 
         print(f"Epoch [{epoch + 1} / {epochs}]")
-        print(f"Train Loss:{train_loss:.4f}")
-        print(f"Train Accuracy:{train_acc:.2f}")
-        print(f"Val Loss:{val_loss:.4f}")
-        print(f"Val Accuracy:{val_acc:.2f}")
+        print(f"Train Loss:{train_loss:.4f} Train Accuracy:{train_acc:.2f}")
+        print(f"Val Loss:{val_loss:.4f} Val Accuracy:{val_acc:.2f}")
+        print()
 
         if val_acc > best_val_acc:
             best_val_acc = val_acc
-            torch.save(model.state_dict(), 'best_model.pt')
+
+            torch.save(model.state_dict(), save_path)
+
+    return history
