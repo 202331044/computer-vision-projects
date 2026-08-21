@@ -10,20 +10,22 @@ class TextTransformer(nn.Module):
                 num_heads,
                 d_ff,
                 N,
-                num_classes):
+                num_classes,
+                dropout):
 
         super().__init__()
         self.pad_idx = pad_idx
-        self.embedding = nn.Embedding( num_embeddings=vocab_size,
-                                       embedding_dim=d_model,
-                                       padding_idx=self.pad_idx)
+        self.embedding = nn.Embedding(num_embeddings=vocab_size,
+                                      embedding_dim=d_model,
+                                      padding_idx=self.pad_idx)
 
         self.posEncoding = pe.PositionalEncoding(max_len, d_model)
 
-        layer = nn.TransformerEncoderLayer( d_model=d_model,
-                                            nhead=num_heads,
-                                            dim_feedforward=d_ff,
-                                            batch_first=True)
+        layer = nn.TransformerEncoderLayer(d_model=d_model,
+                                           nhead=num_heads,
+                                           dim_feedforward=d_ff,
+                                           dropout=dropout,
+                                           batch_first=True)
         self.encoder = nn.TransformerEncoder(layer,
                                              num_layers=N)
         

@@ -62,7 +62,8 @@ def validate(model, device, val_loader, criterion):
         return val_loss, val_acc
 
 def train_model(epochs, model, device, train_loader, val_loader, 
-                optimizer, criterion, scheduler, save_path="checkpoints/best_model.pt"):
+                optimizer, criterion, scheduler, 
+                config, save_path="checkpoints/best_model.pt"):
     history = {
                 "train_loss" : [],
                 "train_acc" : [],
@@ -70,6 +71,7 @@ def train_model(epochs, model, device, train_loader, val_loader,
                 "val_acc" : []
               }
     
+
     best_val_acc = 0
 
     for epoch in range(epochs):
@@ -94,13 +96,22 @@ def train_model(epochs, model, device, train_loader, val_loader,
         scheduler.step()
 
         print(f"Epoch [{epoch + 1} / {epochs}]")
-        print(f"Train Loss:{train_loss:.4f} Train Accuracy:{train_acc:.2f}")
-        print(f"Val Loss:{val_loss:.4f} Val Accuracy:{val_acc:.2f}")
+        print(f"Train Loss: {train_loss:.4f} Train Accuracy: {train_acc:.2f}%")
+        print(f"Val Loss: {val_loss:.4f} Val Accuracy: {val_acc:.2f}%")
         print()
 
         if val_acc > best_val_acc:
+            checkpoint = {
+                "epoch" : epoch,
+                "model_state_dict" : model.state_dict(),
+                "optimizer_state_dict" : optimizer.state_dict(),
+                "scheduler_state_dict" : scheduler.state_dict(),
+                "best_val_acc": best_val_acc,
+                "config": config
+            }
+
             best_val_acc = val_acc
 
-            torch.save(model.state_dict(), save_path)
+            torch.save(checkpoint, save_path)
 
     return history
