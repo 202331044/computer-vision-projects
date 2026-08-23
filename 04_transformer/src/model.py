@@ -314,12 +314,12 @@ class Transformer(nn.Module):
         return out
 
 
-    def generate(self, src, max_len, BOS_ID, EOS_ID):
+    def generate(self, src, max_len, BOS_ID, EOS_ID, src_padding_mask = None):
 
         self.eval()
 
         with torch.no_grad():
-            memory = self.encoder(src)
+            memory = self.encoder(src, src_padding_mask)
             batch_size = src.size(0)
             tgt = torch.full((batch_size, 1), 
                               BOS_ID, 
@@ -327,7 +327,7 @@ class Transformer(nn.Module):
                               device = src.device)
             
             for _ in range(max_len):
-                out = self.decoder(tgt, memory)
+                out = self.decoder(tgt, memory, src_padding_mask)
                 out = self.fc(out)
 
                 prob = out[:, -1 , :]

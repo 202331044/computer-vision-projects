@@ -8,13 +8,19 @@ def train(epochs,
           tgt, 
           tgt_vocab_size, 
           causal_mask,
+          src_padding_mask,
+          tgt_padding_mask,
           PAD_ID):
     
     model.train()
     for epoch in range(epochs):
         optimizer.zero_grad()
 
-        out = model(src, tgt, causal_mask = causal_mask)
+        out = model(src, tgt, 
+                    src_padding_mask=src_padding_mask,
+                    tgt_padding_mask=tgt_padding_mask,
+                    causal_mask=causal_mask)
+
         loss = criterion(out.reshape(-1, tgt_vocab_size), 
                         label.reshape(-1))
         
@@ -32,8 +38,6 @@ def train(epochs,
             print(f"---------epoch: {epoch + 1}---------")
             print(f"loss: {loss.item() :.4f} accuracy: {correct / total :.2f}")
 
-def inference(model, src, max_len, BOS_ID, EOS_ID):
+def inference(model, src, max_len, BOS_ID, EOS_ID, src_padding_mask = None):
 
-    return model.generate(src, max_len, BOS_ID, EOS_ID)
-
-
+    return model.generate(src, max_len, BOS_ID, EOS_ID, src_padding_mask)

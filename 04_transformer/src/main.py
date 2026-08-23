@@ -31,7 +31,7 @@ def run(epochs, lr):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    str_src = ["나는", "밥을", "먹는다", "<EOS>"]
+    str_src = ["나는", "밥을", "먹는다","<EOS>"]
     str_tgt = ["<BOS>", "I", "eat", "rice"]
     str_label = ["I", "eat", "rice", "<EOS>"]
 
@@ -74,12 +74,16 @@ def run(epochs, lr):
 
     seq_len = tgt.size(1)
     causal_mask = torch.triu(torch.ones(seq_len, seq_len), diagonal = 1).bool()
+    src_padding_mask = (src == PAD_ID)
+    tgt_padding_mask = (tgt == PAD_ID)
 
     transformer = transformer.to(device)
     src = src.to(device)
     tgt = tgt.to(device)
     label = label.to(device)
     causal_mask = causal_mask.to(device)
+    src_padding_mask = src_padding_mask.to(device)
+    tgt_padding_mask = tgt_padding_mask.to(device)
 
     optimizer = optim.Adam(transformer.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss(ignore_index = PAD_ID)
@@ -93,10 +97,12 @@ def run(epochs, lr):
           tgt, 
           tgt_vocab_size, 
           causal_mask,
+          src_padding_mask,
+          tgt_padding_mask,
           PAD_ID)
 
     max_len = 4
-    result = tr.inference(transformer, src, max_len, BOS_ID, EOS_ID)
+    result = tr.inference(transformer, src, max_len, BOS_ID, EOS_ID, src_padding_mask)
 
     id_to_token = { v: k for k, v in tgt_vocab.items()}
 
