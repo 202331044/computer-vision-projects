@@ -101,6 +101,8 @@ def train_model(epochs, model, device, train_loader, val_loader,
         print()
 
         if val_acc > best_val_acc:
+            best_val_acc = val_acc
+            
             checkpoint = {
                 "epoch" : epoch,
                 "model_state_dict" : model.state_dict(),
@@ -109,8 +111,6 @@ def train_model(epochs, model, device, train_loader, val_loader,
                 "best_val_acc": best_val_acc,
                 "config": config
             }
-
-            best_val_acc = val_acc
 
             torch.save(checkpoint, save_path)
 
