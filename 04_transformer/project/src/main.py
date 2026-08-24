@@ -11,7 +11,7 @@ from pathlib import Path
 import visualize as vis
 from evaluate import evaluate
 
-def run(epochs):
+def run(epochs, nheads, nlayers):
 
     ag_news_train = load_dataset('fancyzhx/ag_news', split='train')
     ag_news_test = load_dataset('fancyzhx/ag_news', split='test')
@@ -57,9 +57,9 @@ def run(epochs):
     d_model = 128
     pad_idx = 0
     max_len = 128
-    num_heads = 4
+    num_heads = nheads
     d_ff = 512
-    N = 2
+    N = nlayers
     num_classes = 4
     dropout = 0.1
 
@@ -83,8 +83,9 @@ def run(epochs):
 
     checkpoint_dir = Path("../checkpoints")
     checkpoint_dir.mkdir(exist_ok=True)
-    checkpoint_path = checkpoint_dir / "best_model.pt"
-
+    #checkpoint_path = checkpoint_dir / "best_model_baseline.pt"
+    checkpoint_path = checkpoint_dir / "best_model_cmp.pt"
+    
     config = {
         "vocab_size": vocab_size,
         "d_model": d_model,
@@ -106,13 +107,14 @@ def run(epochs):
                 config,
                 save_path=checkpoint_path)
                 
-    fig_dir = Path("../results")
-    fig_dir.mkdir(exist_ok=True)
-    loss_path = fig_dir / "train_val_loss.png"
-    acc_path = fig_dir / "train_val_acc.png"
+    # fig_dir = Path("../results")
+    # fig_dir.mkdir(exist_ok=True)
+    
+    # loss_path = fig_dir / "train_val_loss.png"
+    # acc_path = fig_dir / "train_val_acc.png"
 
-    vis.plot_loss(history, loss_path)
-    vis.plot_acc(history, acc_path)
+    # vis.plot_loss(history, loss_path)
+    # vis.plot_acc(history, acc_path)
 
     checkpoint = torch.load(checkpoint_path)
     model.load_state_dict(checkpoint["model_state_dict"])
@@ -120,27 +122,32 @@ def run(epochs):
     results = evaluate(model, test_loader, device, criterion)
 
     print("Evaluation Results")
-    print(f"Loss: {results['loss']:.4f}")
-    print(f"Accuracy: {results['accuracy']:.2f}%")
-    print(f"Precision: {results['precision']:.4f}")
-    print(f"Recall: {results['recall']:.4f}")
+    print("num_heads: ", num_heads)
+    print("N: ", N)
+    print("Parameters: ", sum(p.numel() for p in checkpoint['model_state_dict'].values()))
+    # print(f"Loss: {results['loss']:.4f}")
+    print(f"Accuracy: {results['accuracy']:.4f}")
+    # print(f"Precision: {results['precision']:.4f}")
+    # print(f"Recall: {results['recall']:.4f}")
     print(f"F1 Score: {results['f1']:.4f}")
     print(f"ROC AUC (OVR, Macro): {results['macro_roc_auc']:.4f}")
     
-    class_names = ['World', 'Sports', 'Business', 'Sci_Tech']
-    roc_auc_dir = Path("../results")
-    roc_auc_dir.mkdir(exist_ok=True)
-    vis.plot_roc_auc_curve(results['fpr'], results['tpr'], 
-                       class_names, results['roc_auc'], roc_auc_dir)
+    # class_names = ['World', 'Sports', 'Business', 'Sci_Tech']
+    # roc_auc_dir = Path("../results")
+    # roc_auc_dir.mkdir(exist_ok=True)
+    # vis.plot_roc_auc_curve(results['fpr'], results['tpr'], 
+    #                    class_names, results['roc_auc'], roc_auc_dir)
 
-    cm_dir = Path("../results")
-    cm_dir.mkdir(exist_ok=True)
-    cm_path = cm_dir/"normalized_confusion_matrix.png"
-    vis.plot_confusion_matrix(results['confusion_matrix'], class_names, cm_path)
+    # cm_dir = Path("../results")
+    # cm_dir.mkdir(exist_ok=True)
+    # cm_path = cm_dir/"normalized_confusion_matrix.png"
+    # vis.plot_confusion_matrix(results['confusion_matrix'], class_names, cm_path)
     
 if __name__ == '__main__' :
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs', type=int, default=5)
+    parser.add_argument('--nheads', type=int, default=4)
+    parser.add_argument('--nlayers', type=int, default=2)
     args = parser.parse_args()
-    run(args.epochs)
+    run(args.epochs, args.nheads, args.nlayers)
