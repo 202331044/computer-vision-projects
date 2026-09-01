@@ -54,6 +54,7 @@ class MultiHeadAttention(nn.Module):
         v = v.transpose(1, 2)
 
         score = q @ k.transpose(-1, -2) / (head_dim ** 0.5)
+        
         weight = torch.softmax(score, dim=-1)
         output = weight @ v
 
