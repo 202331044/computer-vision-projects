@@ -80,7 +80,6 @@ class YOLO(nn.Module):
 
         return out
 
-
 def iou(pred_box, target_box):
 
     pred_x, pred_y, pred_w, pred_h = pred_box
@@ -96,61 +95,118 @@ def iou(pred_box, target_box):
     target_x2 = target_x + target_w/2
     target_y2 = target_y + target_h/2
     
-    x1 = max(pred_x1, target_x1)
-    x2 = min(pred_x2, target_x2)
-    y1 = max(pred_y1, target_y1)
-    y2 = min(pred_y2, target_y2)
+    x1 = torch.maximum(pred_x1, target_x1)
+    x2 = torch.minimum(pred_x2, target_x2)
+    y1 = torch.maximum(pred_y1, target_y1)
+    y2 = torch.minimum(pred_y2, target_y2)
 
-    inter_w = max(0, x2 - x1)
-    inter_h = max(0, y2 - y1)
+    inter_w = torch.clamp(x2 - x1, min = 0)
+    inter_h = torch.clamp(y2 - y1, min = 0)
     intersection = inter_w * inter_h
 
     union = (pred_w * pred_h + target_w * target_h) - intersection
-
-    if union <= 0: 
-        return 0
+    union = torch.clamp(union, min = 1e-6)
     
     return intersection / union
 
-if __name__ == '__main__':
-    s = 7
-    b = 2
-    c = 20
+def loss(targets, pred, predictors, grid_size, num_boxes, num_classes):
+    coord = 5
+    noobj = 0.5
 
-    model = YOLO(s, b, c)
+    loss1 = 0.0
+    loss2 = 0.0
+    loss3 = 0.0
+    loss4 = 0.0
+    loss5 = 0.0
+
+    batch_size = targets.shape[0]
+    target_size = targets.shape[1]
+
+    tgt_sets = []
+
+    for batch_idx in range(batch_size):
+        tgt_set = set()
+
+        for obj_idx in range(target_size):
+            (tgt_r, tgt_c, 
+             tgt_x, tgt_y, 
+             tgt_w, tgt_h, 
+             _, tgt_class_idx) = targets[batch_idx][obj_idx]
+
+            tgt_r = int(tgt_r)
+            tgt_c = int(tgt_c)
+            tgt_class_idx = int(tgt_class_idx)
+            predictor = int(predictors[batch_idx][obj_idx])
+
+            pred_idx = predictor * 5
+
+            pred_x, pred_y, pred_w, pred_h, pred_conf =\
+                  pred[batch_idx, tgt_r, tgt_c, pred_idx : pred_idx + 5]
+
+            tgt_conf = iou((pred_x, pred_y, pred_w, pred_h ),
+                           (tgt_x, tgt_y, tgt_w, tgt_h))
+    
+            loss1 += ((tgt_x - pred_x) ** 2 + (tgt_y - pred_y) ** 2)
+
+            loss2 += ((torch.sqrt(tgt_w) - torch.sqrt(pred_w)) ** 2 +
+                      (torch.sqrt(tgt_h) - torch.sqrt(pred_h)) ** 2)
+            
+            loss3 += (tgt_conf - pred_conf) ** 2
+
+            tgt_set.add((tgt_r, tgt_c, predictor))
+
+            for class_idx in range(num_classes):
+                tgt_prob = 1 if tgt_class_idx == class_idx else 0
+                pred_prob = pred[batch_idx, tgt_r, tgt_c, 10 + class_idx]
+
+                loss5 += (tgt_prob - pred_prob) ** 2
+
+
+        tgt_sets.append(tgt_set)
+
+    for batch_idx in range(batch_size):
+        for row in range(grid_size):
+            for col in range(grid_size):
+                for box_idx in range(num_boxes):
+                    if (row, col, box_idx) not in tgt_sets[batch_idx]:
+                        idx = box_idx * 5
+                        conf = pred[batch_idx, row, col, idx + 4]
+                        loss4 += conf ** 2
+                
+    loss1 *= coord
+    loss2 *= coord
+    loss4 *= noobj
+
+    return loss1, loss2, loss3, loss4, loss5
+
+if __name__ == '__main__':
+    grid_size = 7
+    num_boxes = 2
+    num_classes = 20
+
+    model = YOLO(grid_size, num_boxes, num_classes)
     img = torch.randn(2, 3, 448, 448)
     out = model(img)
-    out = out.view(-1, s, s, b * 5 + c)
-
-    #target tensor, predictor = 1
+    out = out.view(-1, grid_size, grid_size, num_boxes * 5 + num_classes)
     batch_idx = 0
 
-    target = torch.zeros(s, s, b * 5 + c)
-    tgt_r = 2
-    tgt_c = 3
-    tgt_x = 0.906
-    tgt_y = 0.813
-    tgt_w = 0.223
-    tgt_h = 0.268
-    tgt_conf = 1
-    tgt_class_idx = 5
+    targets = torch.tensor([
+        [
+            [2, 3, 0.5, 0.5, 0.2, 0.3, 1.0, 5]
+        ]
+    ])
 
-    target[tgt_r, tgt_c, :5] = torch.tensor([tgt_x, tgt_y, tgt_w, tgt_h, tgt_conf])
-    target[tgt_r, tgt_c, 10 + tgt_class_idx] = 1
+    predictors = torch.tensor([
+        [0]
+    ])
 
-    #IOU
+    pred = torch.zeros(1, grid_size, grid_size, num_boxes * 5 + num_classes)
 
-    pred_x1, pred_y1, pred_w1, pred_h1, pred_conf1 = out[batch_idx, tgt_r, tgt_c, :5]
-    pred_x2, pred_y2, pred_w2, pred_h2, pred_conf2 = out[batch_idx, tgt_r, tgt_c, 5:10]
+    pred[0, 2, 3, 0] = 0.6
+    pred[0, 2, 3, 1] = 0.4
+    pred[0, 2, 3, 2] = 0.25
+    pred[0, 2, 3, 3] = 0.35
+    pred[0, 2, 3, 4] = 0.8 
+    pred[0, 2, 3, 15] = 0.7
 
-    iou1 = iou((pred_x1, pred_y1, pred_w1, pred_h1), (tgt_x, tgt_y, tgt_w, tgt_h))
-    iou2 = iou((pred_x2, pred_y2, pred_w2, pred_h2), (tgt_x, tgt_y, tgt_w, tgt_h))
-
-    print(iou1.item())
-    print(iou2.item())
-
-    if iou1.item() >= iou2.item():
-        predictor = 0
-    else:
-        predictor = 1
-
+    print(loss(targets, pred, predictors, grid_size, num_boxes, num_classes))
