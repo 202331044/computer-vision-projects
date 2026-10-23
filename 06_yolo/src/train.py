@@ -1,16 +1,30 @@
-from loss import yolo_loss, iou, get_predictors
 import torch
-from loss import NMS
+from loss import yolo_loss, get_predictors, NMS
 
-def train(model, train_loader, device, optimizer,
-          grid_size, num_boxes, num_classes):
+def train(
+    model, 
+    train_loader, 
+    device, 
+    optimizer,
+    grid_size,
+    num_boxes, 
+    num_classes,
+):
+
     """
-    `predictions` has the shape
-    [grid_size, grid_size, num_boxes * 5 + num_classes].
+    Train the YOLO model for one epoch.
 
-    The last dimension consists of
-    num_boxes * [x, y, w, h, confidence],
-    followed by the class scores.
+    Args:
+        model: YOLO model to train.
+        train_loader: DataLoader for the training dataset.
+        device: Device used for training (CPU or CUDA).
+        optimizer: Optimizer used to update model parameters.
+        grid_size: Number of grid cells along each image dimension.
+        num_boxes: Number of bounding boxes predicted per grid cell.
+        num_classes: Number of object classes.
+
+    Returns:
+        Average training loss weighted by batch size.
     """
 
     model.train()
@@ -18,84 +32,235 @@ def train(model, train_loader, device, optimizer,
     total_loss = 0.0
     total_size = 0
 
-    for imgs, targets in train_loader:
+    for imgs, targets, filenames in train_loader:
         imgs = imgs.to(device)
         targets = targets.to(device)
 
-        batch_size = targets.shape[0]
+        batch_size = imgs.size(0)
 
         optimizer.zero_grad()
 
         predictions = model(imgs)
-        predictions = predictions.view(-1, 
-                                       grid_size, 
-                                       grid_size, 
-                                       num_boxes * 5 + num_classes)
 
         predictors = get_predictors(targets, predictions, grid_size, num_boxes)
 
-        loss = yolo_loss(targets, predictions, predictors, 
-                         grid_size, num_boxes, num_classes)
+        loss = yolo_loss(
+            targets, 
+            predictions, 
+            predictors, 
+            grid_size, 
+            num_boxes, 
+        )
         
-        total_loss += loss.item()
-        total_size += batch_size
-
         loss.backward()
         optimizer.step()
 
+        total_loss += loss.item() * batch_size
+        total_size += batch_size
+
     return total_loss / total_size
 
-def evaluate(model, val_loader, device, 
-             grid_size, num_boxes, num_classes,
-             score_threshold=0.2, iou_threshold=0.5):
+def evaluate(
+    model, 
+    val_loader, 
+    device, 
+    grid_size, 
+    num_boxes, 
+    num_classes,
+    score_threshold, 
+    iou_threshold,
+):
+
+    """
+    Evaluate the YOLO model on the validation dataset.
+
+    Args:
+        model: YOLO model to evaluate.
+        val_loader: DataLoader for the validation dataset.
+        device: Device used for evaluation (CPU or CUDA).
+        grid_size: Number of grid cells along each image dimension.
+        num_boxes: Number of bounding boxes predicted per grid cell.
+        num_classes: Number of object classes.
+        score_threshold: Minimum confidence score for detections.
+        iou_threshold: IoU threshold used for non-maximum suppression (NMS).
+
+    Tensor Shapes:
+        predictions (Tensor):
+        Shape: [batch_size, grid_size, grid_size, num_boxes * 5 + num_classes]
+
+            Each bounding box prediction contains:
+                - x, y: Predicted bounding box center coordinates.
+                - w, h: Predicted bounding box width and height.
+                - confidence: Predicted confidence score.
+
+            Class scores are normalized with softmax and sum to 1
+            across classes for each grid cell.
+
+        targets (Tensor):
+            Shape: [batch_size, grid_size, grid_size, 6]
+
+            Each grid cell contains:
+                - x_cell_offset, y_cell_offset: Bounding box center coordinates
+                relative to the assigned grid cell, normalized to [0, 1).
+                - bbox_w_ratio, bbox_h_ratio: Bounding box width and height
+                normalized by the target image dimensions.
+                - class_id: Integer index of the object class.
+                - objectness: 1 if an object is assigned to the cell,
+                otherwise 0.
+
+    Output Details:
+        detection (list):
+            NMS results for a single image. Each detection contains:
+                [row, col, x, y, w, h, box_idx, score, class_idx]
+
+            score: Confidence score multiplied by class probability.
+
+    Returns:
+        tuple:
+        - average_loss: Average validation loss.
+        - gt_by_class (list): Ground-truth bounding boxes grouped by class ID.
+            Each entry contains:
+                - filename (str): Name of the image file.
+                - bbox (list): Ground-truth bounding boxes belonging to that class
+                  in the image.
+
+        - results (dict): NMS-filtered predicted detections grouped by filename.
+            Each entry contains a list of detections in the format:
+                [row, col, x, y, w, h, box_idx, score, class_idx]
+    """
+
     model.eval()
 
     total_loss = 0.0
     total_size = 0
-    all_detections = []
+
+    results = {}
+    gt_by_class = [[] for _ in range(num_classes)]
 
     with torch.no_grad():
-        for imgs, targets in val_loader:
+
+        for imgs, targets, filenames in val_loader:
             imgs = imgs.to(device)
             targets = targets.to(device)
 
-            batch_size = targets.shape[0]
+            batch_size = imgs.size(0)
+
             predictions = model(imgs)
-            predictions = predictions.view(-1, 
-                                           grid_size, 
-                                           grid_size, 
-                                           num_boxes * 5 + num_classes)
 
-            predictors = get_predictors(targets, 
-                                        predictions, 
-                                        grid_size, 
-                                        num_boxes)
+            predictors = get_predictors(
+                targets, 
+                predictions, 
+                grid_size, 
+                num_boxes,
+            )
 
+            loss = yolo_loss(
+                targets, 
+                predictions, 
+                predictors,
+                grid_size, 
+                num_boxes, 
+            )
+            
+            total_loss += loss.item() * batch_size
             total_size += batch_size
 
-            loss = yolo_loss(targets, predictions, predictors, 
-                             grid_size, num_boxes, num_classes)
-            total_loss += loss.item()
+            # Collect ground-truth boxes and apply NMS
+            for filename, prediction, target in zip(
+                filenames, 
+                predictions, 
+                targets
+            ):
 
-            detections = NMS(batch_size, grid_size, predictions, 
-                             score_threshold, iou_threshold,
-                             num_boxes, num_classes)
-            all_detections.extend(detections)
+                objects_by_class = [[] for _ in range(num_classes)]
 
-    return total_loss / total_size, all_detections
+                # Extract ground-truth boxes from the target grid
+                for row in range(grid_size):
+                    for col in range(grid_size):
+                        x, y, w, h, class_id, objectness = target[row, col]
 
-def train_model(model, epochs, train_loader, val_loader, 
-                device, optimizer,
-                grid_size, num_boxes, num_classes):
+                        if objectness.item() < 1:
+                            continue
+
+                        class_id = int(class_id.item())
+
+                        objects_by_class[class_id].append(
+                            (
+                                row,
+                                col,
+                                x.item(),
+                                y.item(),
+                                w.item(),
+                                h.item(),
+                            )
+                        )
+
+                # Group ground-truth boxes by class
+                for class_id, bboxes in enumerate(objects_by_class):
+                    if bboxes:   
+                        gt_by_class[class_id].append({
+                            'filename': filename,
+                            'bbox': bboxes,
+                        })
+
+                # Apply non-maximum suppression (NMS)
+                results[filename] = NMS(
+                    grid_size,
+                    prediction,
+                    score_threshold,
+                    iou_threshold,
+                    num_boxes,
+                    num_classes,
+                )
+
+    return total_loss / total_size, gt_by_class, results
+
+def train_model(
+    model, 
+    epochs, 
+    train_loader,
+    val_loader, 
+    device, 
+    optimizer,
+    grid_size, 
+    num_boxes,
+    num_classes,
+    score_threshold,
+    iou_threshold,
+):
     
-    for epoch in range(epochs):
-        train_loss = train(model, train_loader, device, optimizer, 
-                           grid_size, num_boxes, num_classes)
+    best_loss = float('inf')
+
+    for epoch in range(epochs):  
+        print(f"\nEpoch [{epoch + 1}/{epochs}]")
+
+        train_loss = train(
+            model, 
+            train_loader, 
+            device, 
+            optimizer, 
+            grid_size, 
+            num_boxes, 
+            num_classes,
+        )
+
+        val_loss, gt_by_class, results = evaluate(
+            model, 
+            val_loader, 
+            device, 
+            grid_size, 
+            num_boxes, 
+            num_classes,
+            score_threshold, 
+            iou_threshold,
+        )
+
+        print(f"Train Loss:{train_loss:.4f}")
+        print(f"Validation Loss:{val_loss:.4f}")
         
-        # val_loss, all_detections  = evaluate(model, val_loader, device, 
-        #                     grid_size, num_boxes, num_classes)
+        if best_loss > val_loss:
+            best_loss = val_loss
+            torch.save(model.state_dict(), "best_model2.pth")
+            print(f"Best model saved (val_loss: {best_loss:.4f})")
 
         
-        print(f"Epoch:{epoch + 1}")
-        print(f"Train Loss:{train_loss:.4f}")
-        #print(f"Validation Loss:{val_loss:.4f}")
