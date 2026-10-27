@@ -1,5 +1,5 @@
 import torch
-from loss import yolo_loss, get_predictors, NMS
+from loss import yolo_loss, get_predictors, NMS, mAP
 
 def train(
     model, 
@@ -117,16 +117,23 @@ def evaluate(
 
     Returns:
         tuple:
-        - average_loss: Average validation loss.
-        - gt_by_class (list): Ground-truth bounding boxes grouped by class ID.
-            Each entry contains:
-                - filename (str): Name of the image file.
-                - bbox (list): Ground-truth bounding boxes belonging to that class
-                  in the image.
+        - average_loss (float): Average validation loss.
 
-        - results (dict): NMS-filtered predicted detections grouped by filename.
-            Each entry contains a list of detections in the format:
-                [row, col, x, y, w, h, box_idx, score, class_idx]
+        - ground_truths (list[dict]): Ground-truth bounding boxes collected
+        from the target grid. Each dictionary contains:
+            - filename (str): Name of the image file.
+            - box (list): Ground-truth bounding box in the format
+            [row, col, x, y, w, h].
+            - cls (int): Ground-truth class ID.
+
+        - results (list[dict]): NMS-filtered predicted detections.
+        Each dictionary contains:
+            - filename (str): Name of the image file.
+            - box (list): Predicted bounding box in the format
+            [row, col, x, y, w, h].
+            - score (float): Detection confidence score multiplied
+            by the predicted class probability.
+            - cls (int): Predicted class ID.
     """
 
     model.eval()
@@ -134,8 +141,8 @@ def evaluate(
     total_loss = 0.0
     total_size = 0
 
-    results = {}
-    gt_by_class = [[] for _ in range(num_classes)]
+    results = []
+    ground_truths = []
 
     with torch.no_grad():
 
@@ -172,8 +179,6 @@ def evaluate(
                 targets
             ):
 
-                objects_by_class = [[] for _ in range(num_classes)]
-
                 # Extract ground-truth boxes from the target grid
                 for row in range(grid_size):
                     for col in range(grid_size):
@@ -184,27 +189,14 @@ def evaluate(
 
                         class_id = int(class_id.item())
 
-                        objects_by_class[class_id].append(
-                            (
-                                row,
-                                col,
-                                x.item(),
-                                y.item(),
-                                w.item(),
-                                h.item(),
-                            )
-                        )
-
-                # Group ground-truth boxes by class
-                for class_id, bboxes in enumerate(objects_by_class):
-                    if bboxes:   
-                        gt_by_class[class_id].append({
+                        ground_truths.append({
                             'filename': filename,
-                            'bbox': bboxes,
+                            'box': [row, col, x, y, w, h],
+                            'cls': class_id
                         })
 
                 # Apply non-maximum suppression (NMS)
-                results[filename] = NMS(
+                nms_results = NMS(
                     grid_size,
                     prediction,
                     score_threshold,
@@ -213,7 +205,16 @@ def evaluate(
                     num_classes,
                 )
 
-    return total_loss / total_size, gt_by_class, results
+                for img_result in nms_results:
+                    results.append({
+                        'filename' : filename, 
+                        'box': img_result[:6],
+                        'score': float(img_result[7]),
+                        'cls': int(img_result[8])
+                    })
+
+
+    return total_loss / total_size, ground_truths, results
 
 def train_model(
     model, 
@@ -244,7 +245,7 @@ def train_model(
             num_classes,
         )
 
-        val_loss, gt_by_class, results = evaluate(
+        val_loss, ground_truths, predictions = evaluate(
             model, 
             val_loader, 
             device, 
@@ -260,7 +261,18 @@ def train_model(
         
         if best_loss > val_loss:
             best_loss = val_loss
-            torch.save(model.state_dict(), "best_model2.pth")
+            torch.save(model.state_dict(), "best_model.pth")
             print(f"Best model saved (val_loss: {best_loss:.4f})")
+
+        map_score = mAP(
+            grid_size,
+            predictions,
+            ground_truths,
+            num_classes,
+            iou_threshold = 0.5
+        )
+
+        print(f"mAP: {map_score:.4f}")
+
 
         

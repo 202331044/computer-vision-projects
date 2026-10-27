@@ -1,6 +1,191 @@
 import torch
 import numpy as np
 import sys
+from sklearn.metrics import average_precision_score
+
+def mAP(
+    grid_size,
+    predictions,
+    ground_truths,
+    num_classes,
+    iou_threshold
+):
+
+    ap_values = []
+    for class_idx in range(num_classes):
+        ap_score = ap(
+            grid_size,
+            predictions,
+            ground_truths,
+            class_idx,
+            iou_threshold
+        )
+
+        if not np.isnan(ap_score):
+            ap_values.append(ap_score)
+    
+    if len(ap_values) == 0:
+        return np.nan
+    
+    return float(np.mean(ap_values))
+
+
+def ap(
+    grid_size,
+    predictions,
+    ground_truths,
+    class_idx,
+    iou_threshold
+):
+    
+    """
+    Calculate Average Precision (AP) for a specific class.
+
+    Args:
+        predictions (list[dict]): NMS-filtered predicted detections.
+            Each dictionary contains:
+                - filename (str): Name of the image file.
+                - box (list): Predicted bounding box in the format
+                [row, col, x, y, w, h].
+                - score (float): Detection confidence score multiplied
+                by the predicted class probability.
+                - cls (int): Predicted class ID.
+
+        ground_truths (list[dict]): Ground-truth bounding boxes.
+            Each dictionary contains:
+                - filename (str): Name of the image file.
+                - box (list): Ground-truth bounding box in the format
+                [row, col, x, y, w, h].
+                - cls (int): Ground-truth class ID.
+
+    Returns:
+        float: Average Precision (AP) for the specified class.
+        Returns NaN if no ground-truth objects exist for the class,
+        or 0.0 if ground-truth objects exist but no predictions
+        are available for the class.
+    """
+
+    gt_by_filename = {}
+
+    # Group ground-truth boxes by filename for the specified class
+    for gt in ground_truths:
+        if gt['cls'] != class_idx:
+            continue
+        
+        gt_by_filename.setdefault(gt['filename'], []).append(gt['box'])
+        
+    
+    num_gt = sum(len(boxes) for boxes in gt_by_filename.values())
+
+    # Return NaN if there are no ground-truth boxes for this class
+    if num_gt == 0:
+        return np.nan
+    
+    # Select predictions belonging to the specified class
+    # and sort them by confidence score in descending order
+    preds_by_score = []
+
+    for pred in predictions:
+        if pred['cls'] == class_idx:
+            preds_by_score.append(pred)
+    
+    preds_by_score.sort(key = lambda pred: pred['score'], reverse = True)
+
+    if len(preds_by_score) == 0:
+        return 0.0
+
+    # Initialize true-positive (TP) and false-positive (FP) arrays
+    # for predictions sorted by confidence score
+    tp = torch.zeros(len(preds_by_score))
+    fp = torch.zeros(len(preds_by_score))
+
+    # Track whether each ground-truth box has already been matched
+    matched = {
+        filename: np.zeros(len(boxes), dtype = bool) 
+         for filename, boxes in gt_by_filename.items()
+    }
+
+    for i in range(len(preds_by_score)):
+        pred = preds_by_score[i] 
+        filename = pred['filename']
+
+        # If the image has no ground-truth boxes for this class,
+        # classify the prediction as a false positive
+        if filename not in gt_by_filename:
+            fp[i] = 1
+            continue
+
+        # unmatched_indices = np.where(~matched[filename])[0]
+
+        # if len(unmatched_indices) == 0:
+        #     fp[i] = 1
+        #     continue
+        
+
+        pred_box = torch.as_tensor(
+            pred['box'],
+            dtype = torch.float32
+        )
+
+        gt_boxes = torch.as_tensor(
+             gt_by_filename[filename],
+             dtype = torch.float32
+        )
+
+        # gt_boxes = torch.as_tensor(
+        #     gt_by_filename[filename],
+        #     dtype = torch.float32
+        # )[unmatched_indices]
+
+         # Calculate IoU between the prediction and all ground-truth boxes
+        # Select the ground-truth box with the highest IoU
+        iou_scores = iou(grid_size, pred_box, gt_boxes)
+        idx = int(iou_scores.argmax().item())
+        
+        # If the highest IoU is below the threshold, classify as FP
+        if iou_scores[idx].item() < iou_threshold:
+            fp[i] = 1
+        elif not matched[filename][idx]:
+            matched[filename][idx] = True
+            tp[i] = 1
+        # If the best-matching ground-truth box has already been matched,
+        # classify the prediction as FP (duplicate detection)
+        else:
+            fp[i] = 1
+
+        # if iou_scores[idx].item() >= iou_threshold:
+        #     matched[filename][unmatched_indices[idx]] = True
+        #     tp[i] = 1
+        # else:
+        #     fp[i] = 1
+
+    # Calculate recall and precision at each prediction
+    tp_cumsum = torch.cumsum(tp, dim = 0)
+    fp_cumsum = torch.cumsum(fp, dim = 0)
+
+    recall = tp_cumsum / num_gt
+    precision = tp_cumsum / (tp_cumsum + fp_cumsum + 1e-8)
+
+    # Add boundary values to the recall and precision curves
+    mrec = torch.cat([
+        torch.tensor([0.0]), recall, torch.tensor([1.0])
+    ])
+
+    mpre = torch.cat([
+        torch.tensor([0.0]), precision, torch.tensor([0.0])
+    ])
+
+    # Construct the precision envelope by propagating
+    # the maximum precision value from right to left
+    for i in range(len(mrec) - 2, -1, -1):
+        mpre[i] = torch.maximum(mpre[i], mpre[i + 1])
+    
+    # Find indices where recall changes
+    indices = torch.where(mrec[1:] != mrec[:-1])[0]
+
+    ap = torch.sum((mrec[indices + 1] - mrec[indices]) * mpre[indices + 1])
+
+    return ap.item()
 
 def NMS(
     grid_size, 
