@@ -41,8 +41,7 @@ An improved RNN architecture that uses a cell state and gates to better preserve
 - Can preserve important information for longer sequences.
 
 **Disadvantages**
-- Still requires sequential processing.
-- Sequential dependency makes parallelization difficult.
+- Sequential dependencies make parallelization difficult.
 
 ---
 
@@ -95,9 +94,8 @@ A sequence model based on attention mechanisms, without recurrence or convolutio
 Each token can attend to other tokens in the sequence, while masked self-attention in the decoder prevents attending to future tokens.
 
 **Advantages**
-- Removes sequential dependency.
-- Enables efficient parallel processing on GPUs.
-- Allows each token to directly interact with other tokens in the sequence.
+- Eliminates sequential dependencies, enabling efficient parallel processing on GPUs.
+- Allows each token to attend to all other tokens in the sequence.
 
 ### Architecture
 
@@ -164,6 +162,9 @@ PE_{(pos,2i+1)}=
 \frac{pos}{10000^{2i/d_{model}}}
 \right)
 $$
+
+- `pos`: The position of a token in the sequence.
+- `i`: The index of a dimension pair in the positional encoding.
 
 **Characteristics**
 - Does not require learnable parameters.
