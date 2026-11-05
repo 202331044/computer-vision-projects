@@ -1,4 +1,4 @@
-# 01 MNIST MLP: Image Classification
+# 01. MNIST MLP: Image Classification
 
 ## 🧰 Core Libraries
 

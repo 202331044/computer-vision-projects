@@ -1,4 +1,4 @@
-# 02 CIFAR-10 CNN: Model Performance Improvement
+# 02. CIFAR-10 CNN: Model Performance Improvement
 
 ## step 1. Early Stopping
 

@@ -1,4 +1,4 @@
-# 04 Transformer
+# 04. Transformer
 
 Study the Transformer architecture by implementing it from scratch and using PyTorch implementations.
 

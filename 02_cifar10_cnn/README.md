@@ -1,4 +1,4 @@
-# 02 CIFAR-10 CNN: Image Classification
+# 02. CIFAR-10 CNN: Image Classification
 
 ## 🧰 Core Libraries
 

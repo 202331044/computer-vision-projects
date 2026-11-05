@@ -1,4 +1,4 @@
-# 03 CIFAR-10 Transfer Learning
+# 03. CIFAR-10 Transfer Learning
 
 Transfer learning experiments on CIFAR-10 using a pretrained ResNet-18 and ResNet-50 models.
 

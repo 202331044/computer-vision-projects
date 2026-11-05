@@ -1,4 +1,4 @@
-# 03 CIFAR-10 Transfer Learning
+# 03. CIFAR-10 Transfer Learning
 
 # ResNet18
 
