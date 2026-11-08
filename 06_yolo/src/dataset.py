@@ -2,29 +2,51 @@ import cv2
 import torch
 import numpy as np
 import os
+import pickle
+import shutil
+import tarfile
 from torch.utils.data import Dataset
 from torchvision.datasets import VOCDetection
-
+    
 class VOCDataset(Dataset):
     def __init__(
-        self, 
+        self,
+        year,
         image_set, 
         target_width, 
         target_height, 
         grid_size,
         transform = None,
     ):
-
+        self.year = year
         self.grid_size = grid_size
         self.target_width = target_width
         self.target_height = target_height
         self.transform = transform
 
+        tar_files = {
+            '2007': 'VOCtrainval_06-Nov-2007.tar',
+            '2012': 'VOCtrainval_11-May-2012.tar',
+        }
+
+        tar_filename = tar_files[year]
+
+        src = f'/content/drive/MyDrive/Colab Notebooks/06_yolo/src/data/{tar_filename}'
+        local_tar = f'/content/{tar_filename}'
+
+        shutil.copy2(src, local_tar)
+
+        extract_path = '/content/dataset'
+        os.makedirs(extract_path, exist_ok = True)
+
+        with tarfile.open(local_tar, 'r') as tar:
+            tar.extractall(path = extract_path)
+
         self.dataset = VOCDetection(
-            root = './data',
-            year = '2007',
+            root = extract_path,
+            year = year,
             image_set = image_set,
-            download = True,
+            download = False,
         )
 
         self.VOC_CLASSES = [
@@ -58,7 +80,7 @@ class VOCDataset(Dataset):
         """
         
         self.class_id_dict = { name: idx for idx, name in enumerate(self.VOC_CLASSES)}
-        
+
         self.targets = self._make_targets()
 
     def _make_targets(self):
@@ -78,9 +100,12 @@ class VOCDataset(Dataset):
         """
 
         all_targets = []
+        dataset = self.dataset
+        class_id_dict = self.class_id_dict
 
-        for _, annotations in self.dataset:
+        for _, annotations in dataset:
             image_targets = []
+
             objects = annotations['annotation']['object']
             
             for obj in objects:
@@ -96,7 +121,7 @@ class VOCDataset(Dataset):
                 x_center = xmin + (width / 2)
                 y_center = ymin + (height / 2)
 
-                class_idx = self.class_id_dict[obj['name']]
+                class_idx = class_id_dict[obj['name']]
 
                 image_targets.append([x_center, y_center, width, height, class_idx])
 

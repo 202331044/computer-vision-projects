@@ -228,6 +228,7 @@ def train_model(
     num_classes,
     score_threshold,
     iou_threshold,
+    map_iou_threshold
 ):
     
     best_loss = float('inf')
@@ -269,7 +270,7 @@ def train_model(
             predictions,
             ground_truths,
             num_classes,
-            iou_threshold = 0.5
+            iou_threshold = map_iou_threshold
         )
 
         print(f"mAP: {map_score:.4f}")

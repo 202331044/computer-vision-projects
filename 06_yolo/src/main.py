@@ -3,13 +3,21 @@ import argparse
 from dataset import VOCDataset
 from torchvision import transforms
 from torch.utils.data import DataLoader
-from train import train_model
+from train import train_model, evaluate
 from model import YOLO
+from loss import mAP
+from plot import visualize_voc_predictions
+from torch.utils.data import ConcatDataset
 
-def run(epochs, score_th, iou_th):
+import random
+import os
+import tarfile
+import urllib.request
+
+def run(epochs, score_th, iou_th, map_iou):
 
     """
-    Train and validate the YOLO model on the PASCAL VOC 2007 dataset.
+    Train and validate the YOLO model on the PASCAL VOC 2007 and 2012 dataset.
 
     Model and training configuration:
         - Input image size: 448 × 448
@@ -28,58 +36,145 @@ def run(epochs, score_th, iou_th):
             A detection is suppressed if its IoU with a higher-scoring
             detection of the same class exceeds this threshold.
     """
+    EPOCHS = epochs
+    BATCH_SIZE = 32
+    NUM_BOXES = 2
+    NUM_CLASSES = 20
+    GRID_SIZE = 7
+    TARGET_WIDTH = 448
+    TARGET_HEIGHT = 448
+    LEARNING_RATE = 2e-5
+    SCORE_THRESHOLD = score_th
+    IOU_THRESHOLD = iou_th
+    MAP_IOU_THRESHOLD = map_iou
 
-    batch_size = 32
-    num_boxes = 2
-    num_classes = 20
-    grid_size = 7
-    target_width = 448
-    target_height = 448
-
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     transform = transforms.ToTensor()
 
-    train_dataset = VOCDataset( 
+    model = YOLO(GRID_SIZE, NUM_BOXES, NUM_CLASSES).to(device)
+
+    # model.load_state_dict(
+    #     torch.load(
+    #         "best_model.pth",
+    #         map_location = device,
+    #         weights_only = True,
+    #     )
+    # )
+
+    model.to(device)
+
+    optimizer = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
+
+    train_2007_dataset = VOCDataset(
+        year = '2007',
         image_set = "train",
-        target_width = target_width, 
-        target_height = target_height, 
-        grid_size = grid_size,
+        target_width = TARGET_WIDTH, 
+        target_height = TARGET_HEIGHT, 
+        grid_size = GRID_SIZE,
+        transform = transform,
+    )
+    
+    train_2012_dataset = VOCDataset(
+        year = '2012',
+        image_set = "train",
+        target_width = TARGET_WIDTH, 
+        target_height = TARGET_HEIGHT, 
+        grid_size = GRID_SIZE,
         transform = transform,
     )
 
-    val_dataset =  VOCDataset( 
+    val_2007_dataset =  VOCDataset(
+        year = '2007',
         image_set = "val",
-        target_width = target_width,
-        target_height = target_height,
-        grid_size = grid_size,
+        target_width = TARGET_WIDTH,
+        target_height = TARGET_HEIGHT,
+        grid_size = GRID_SIZE,
         transform = transform,
     )
+
+    val_2012_dataset =  VOCDataset(
+        year = '2012',
+        image_set = "val",
+        target_width = TARGET_WIDTH,
+        target_height = TARGET_HEIGHT,
+        grid_size = GRID_SIZE,
+        transform = transform,
+    )
+
+    train_dataset = ConcatDataset([
+        train_2007_dataset,
+        train_2012_dataset
+    ])
+
+    val_dataset = ConcatDataset([
+        val_2007_dataset,
+        val_2012_dataset
+    ])
 
     train_loader = DataLoader(
         train_dataset, 
-        batch_size = batch_size,
+        batch_size = BATCH_SIZE,
         shuffle = True
     )
 
     val_loader = DataLoader(
         val_dataset, 
-        batch_size = batch_size,
-        shuffle = False
-    )
-        
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = YOLO(grid_size, num_boxes, num_classes).to(device)
-
-    model.load_state_dict(
-        torch.load(
-            "best_model.pth",
-            map_location=device,
-            weights_only=True,
-        )
+        batch_size = BATCH_SIZE,
+        shuffle = False,
     )
 
-    model.to(device)
+    # print("Start evaluate")  
+    # val_loss, ground_truths, predictions = evaluate(
+    #         model, 
+    #         val_loader, 
+    #         device, 
+    #         GRID_SIZE, 
+    #         NUM_BOXES, 
+    #         NUM_CLASSES,
+    #         SCORE_THRESHOLD, 
+    #         IOU_THRESHOLD,
+    #     )
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4)
+    # print(f"IoU Threshold:{IOU_THRESHOLD}")
+    # print(f"SCORE Threshold:{SCORE_THRESHOLD}")
+    # print(f"Validation Loss:{val_loss:.4f}")
+
+    # print("Size after NMS:", len(predictions))
+
+    # map_score = mAP(
+    #     GRID_SIZE,
+    #     predictions,
+    #     ground_truths,
+    #     NUM_CLASSES,
+    #     iou_threshold = map_iou
+    # )
+
+    # print(f"mAP IoU Threshold:{map_iou}")
+    # print(f"mAP: {map_score:.4f}")
+
+    
+    # random.seed(42)
+
+    # image_filenames = [
+    #     os.path.basename(path)
+    #     for path in val_dataset.dataset.images
+    # ]
+
+
+    # sample_images = random.sample(
+    #     image_filenames,
+    #     min(10, len(image_filenames))
+    # )
+
+    # for filename in sample_images:
+    #     visualize_voc_predictions(
+    #         dataset=val_dataset,
+    #         image_filename=filename,
+    #         ground_truths=ground_truths,
+    #         predictions=predictions,
+    #         grid_size=GRID_SIZE,
+    #         class_names=val_dataset.VOC_CLASSES,
+    #     )
 
     train_model(
         model, 
@@ -88,18 +183,20 @@ def run(epochs, score_th, iou_th):
         val_loader, 
         device, 
         optimizer,
-        grid_size, 
-        num_boxes, 
-        num_classes,
-        score_th,
-        iou_th
+        GRID_SIZE, 
+        NUM_BOXES, 
+        NUM_CLASSES,
+        SCORE_THRESHOLD,
+        IOU_THRESHOLD,
+        MAP_IOU_THRESHOLD
     )
 
 if __name__ == '__main__':
     
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type = int, default = 1)
-    parser.add_argument("--score_th", type = float, default = 0.01)
-    parser.add_argument("--iou_th", type = float, default = 0.1)
+    parser.add_argument("--score_th", type = float, default = 0.4)
+    parser.add_argument("--iou_th", type = float, default = 0.5)
+    parser.add_argument("--map_iou", type = float, default = 0.5)
     args = parser.parse_args()
-    run(args.epochs, args.score_th, args.iou_th)
+    run(args.epochs, args.score_th, args.iou_th, args.map_iou)

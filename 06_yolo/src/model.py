@@ -28,6 +28,7 @@ class YOLO(nn.Module):
 
         self.maxpool = nn.MaxPool2d(2, 2)
         self.dropout = nn.Dropout(0.5)
+        #self.dropout = nn.Dropout(0.0)
 
         self.conv1 = self.block(3, 64, 7, 2, 3)
         self.conv2 = self.block(64, 192, 3, 1, 1)
@@ -65,6 +66,7 @@ class YOLO(nn.Module):
             self.block(1024, 1024, 3, 1, 1),
         )
 
+        # 4096 -> 496
         self.fc1 = nn.Sequential(
             nn.Linear(1024 * 7 * 7, 4096),
             nn.LeakyReLU(0.1),
@@ -81,6 +83,8 @@ class YOLO(nn.Module):
     def block(in_channel, out_channel, kernel_size, stride=1, padding=0):
         return nn.Sequential(
             nn.Conv2d(in_channel, out_channel, kernel_size, stride, padding),
+            # Add batchnorm
+            nn.BatchNorm2d(out_channel),
             nn.LeakyReLU(0.1)
         )
     
@@ -106,6 +110,7 @@ class YOLO(nn.Module):
 
         out = self.fc2(out)
 
+
         out = out.view(
             out.size(0),
             self.grid_size,
@@ -113,13 +118,14 @@ class YOLO(nn.Module):
             self.num_boxes * 5 + self.num_classes,
         )
 
-        # Apply sigmoid to bounding box coordinates and confidence
-        boxes = torch.sigmoid(out[..., :self.num_boxes * 5])
+        return out
+        # # Apply sigmoid to bounding box coordinates and confidence
+        # boxes = torch.sigmoid(out[..., :self.num_boxes * 5])
 
-        # Apply softmax to class scores
-        classes  = torch.softmax(
-            out[..., self.num_boxes * 5:],
-            dim = -1,
-        )
+        # # Apply softmax to class scores
+        # classes  = torch.softmax(
+        #     out[..., self.num_boxes * 5:],
+        #     dim = -1,
+        # )
 
-        return torch.cat((boxes, classes), dim = -1)
+        # return torch.cat((boxes, classes), dim = -1)

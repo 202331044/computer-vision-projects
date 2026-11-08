@@ -554,8 +554,8 @@ def yolo_loss(
 
 
                 loss1 += ((tgt_x - pred_x) ** 2 + (tgt_y - pred_y) ** 2)
-                loss2 += ((torch.sqrt(tgt_w) - torch.sqrt(pred_w)) ** 2 +
-                          (torch.sqrt(tgt_h) - torch.sqrt(pred_h)) ** 2)
+                loss2 += ((torch.sqrt(tgt_w) - torch.sqrt(torch.sigmoid(pred_w))) ** 2 +
+                          (torch.sqrt(tgt_h) - torch.sqrt(torch.sigmoid(pred_h))) ** 2)
                 loss3 += (tgt_conf - pred_conf) ** 2
 
                 target_probs = torch.zeros_like(probabilities)
