@@ -8,6 +8,7 @@ from model import YOLO
 from loss import mAP
 from plot import visualize_voc_predictions
 from torch.utils.data import ConcatDataset
+from utils import load_darknet_weights
 
 import random
 import os
@@ -52,6 +53,12 @@ def run(epochs, score_th, iou_th, map_iou):
     transform = transforms.ToTensor()
 
     model = YOLO(GRID_SIZE, NUM_BOXES, NUM_CLASSES).to(device)
+
+    model = load_darknet_weights(
+        model = model,
+        weight_path = "../weights/extraction.weights",
+        num_conv_layers=20
+    )
 
     # model.load_state_dict(
     #     torch.load(

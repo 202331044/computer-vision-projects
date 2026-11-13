@@ -31,7 +31,7 @@ class VOCDataset(Dataset):
 
         tar_filename = tar_files[year]
 
-        src = f'/content/drive/MyDrive/Colab Notebooks/06_yolo/src/data/{tar_filename}'
+        src = f'/content/drive/MyDrive/Colab Notebooks/06_yolo/data/{tar_filename}'
         local_tar = f'/content/{tar_filename}'
 
         shutil.copy2(src, local_tar)
