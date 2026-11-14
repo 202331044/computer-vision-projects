@@ -20,15 +20,14 @@ class YOLO(nn.Module):
     for each grid cell.
     """
 
-    def __init__(self, grid_size, num_boxes, num_classes):
+    def __init__(self, grid_size, num_boxes, num_classes, dropout_rate=0.5):
         super().__init__()
         self.grid_size = grid_size
         self.num_boxes = num_boxes
         self.num_classes = num_classes
 
         self.maxpool = nn.MaxPool2d(2, 2)
-        self.dropout = nn.Dropout(0.5)
-        #self.dropout = nn.Dropout(0.0)
+        self.dropout = nn.Dropout(dropout_rate)
 
         self.conv1 = self.block(3, 64, 7, 2, 3)
         self.conv2 = self.block(64, 192, 3, 1, 1)
@@ -110,7 +109,6 @@ class YOLO(nn.Module):
 
         out = self.fc2(out)
 
-
         out = out.view(
             out.size(0),
             self.grid_size,
@@ -126,6 +124,5 @@ class YOLO(nn.Module):
         # classes  = torch.softmax(
         #     out[..., self.num_boxes * 5:],
         #     dim = -1,
-        # )
-
+        # ) 
         # return torch.cat((boxes, classes), dim = -1)

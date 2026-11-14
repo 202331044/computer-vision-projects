@@ -3,6 +3,44 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+def build_optimizer(config, model):
+    if config.OPTIMIZER == 'SGD':
+        optimizer = torch.optim.SGD(
+            model.parameters(),
+            lr=config.INITIAL_LR,
+            momentum=config.MOMENTUM,
+            weight_decay=config.WEIGHT_DECAY
+        )
+    elif  config.OPTIMIZER == "Adam":
+        optimizer = torch.optim.Adam(
+            model.parameters(),
+            lr=config.INITIAL_LR,
+            weight_decay=config.WEIGHT_DECAY
+        )
+    else:
+        raise ValueError(f"Unsupported optimizer: { config.OPTIMIZER}")
+
+    return optimizer
+
+def adjust_learning_rate(config, optimizer, epoch):
+    if epoch < config.WARMUP_EPOCHS:
+        lr = config.INITIAL_LR \
+            + (config.MAX_LR - config.INITIAL_LR) \
+                * ((epoch + 1) / config.WARMUP_EPOCHS)
+    elif epoch < config.LR_STAGE_1:
+        lr = config.MAX_LR
+    elif epoch < config.LR_STAGE_2:
+        lr = config.INITIAL_LR 
+    elif epoch < config.LR_STAGE_3:
+        lr = config.MIN_LR
+    else:
+        lr = config.MIN_LR
+        
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
+    
+    return lr
+
 def load_darknet_weights(model, weight_path, num_conv_layers=20):
 
     with open(weight_path, "rb") as f:

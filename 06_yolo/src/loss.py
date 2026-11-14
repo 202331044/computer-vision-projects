@@ -4,9 +4,9 @@ import sys
 from sklearn.metrics import average_precision_score
 
 def mAP(
-    grid_size,
     predictions,
     ground_truths,
+    grid_size,
     num_classes,
     iou_threshold
 ):
@@ -188,12 +188,8 @@ def ap(
     return ap.item()
 
 def NMS(
-    grid_size, 
-    prediction, 
-    score_threshold, 
-    iou_threshold,
-    num_boxes, 
-    num_classes,
+    config,
+    prediction
 ):
 
     """
@@ -202,8 +198,6 @@ def NMS(
     Args:
         prediction (Tensor):
             Shape: [grid_size, grid_size, num_boxes * 5 + num_classes].
-        score_threshold: Minimum score required to keep a detection.
-        iou_threshold: Maximum IoU allowed between retained detections.
 
     Returns:
         list: NMS detections in the format
@@ -211,6 +205,12 @@ def NMS(
 
         score: Confidence score multiplied by class probability.
     """
+
+    grid_size = config.GRID_SIZE 
+    score_threshold = config.SCORE_THRESHOLD 
+    nms_iou_threshold = config.NMS_IOU_THRESHOLD 
+    num_boxes = config.NUM_BOXES 
+    num_classes = config.NUM_CLASSES 
 
     with torch.no_grad():
         # Filter detections by score for each class
