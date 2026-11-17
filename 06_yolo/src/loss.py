@@ -273,7 +273,7 @@ def NMS(
                         tgt_box,
                     )
 
-                    if iou_score.item() <= iou_threshold:
+                    if iou_score.item() <= nms_iou_threshold:
                         remaining.append(detection)
 
                 detections = remaining
@@ -540,11 +540,14 @@ def yolo_loss(
                     num_boxes * 5:
                 ]
                 
-                pred_box = torch.tensor([
-                    row, col, pred_x, pred_y, pred_w, pred_h
+                pred_box = torch.cat([
+                    predictions.new_tensor([row, col]),
+                    torch.stack([pred_x, pred_y, pred_w, pred_h])
                 ])
-                tgt_box = torch.tensor([
-                    row, col, tgt_x, tgt_y, tgt_w, tgt_h
+
+                tgt_box = torch.cat([
+                    targets.new_tensor([row, col]),
+                    torch.stack([tgt_x, tgt_y, tgt_w, tgt_h])
                 ])
                 tgt_conf = iou(
                     grid_size,
