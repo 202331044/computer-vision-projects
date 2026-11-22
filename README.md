@@ -32,3 +32,4 @@ Each folder contains:
 | 03_cifar10_transfer_learning | Transfer learning on CIFAR-10 using pretrained CNN models | [View](./03_cifar10_transfer_learning) |
 | 04_transformer | Transformer implementation from scratch and AG News classification using PyTorch Transformer models | [View](./04_transformer) |
 | 05_vision_transformer | Vision Transformer (ViT) implementation and CIFAR-10 image classification using PyTorch | [View](./05_vision_transformer) |
+| 06_yolo | YOLO v1 implementation and object detection experiments on the PASCAL VOC dataset | [View](./06_yolo) |
