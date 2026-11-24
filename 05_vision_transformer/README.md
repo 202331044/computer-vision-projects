@@ -29,18 +29,19 @@ Implemented a Vision Transformer (ViT) model using PyTorch and evaluated its per
 - Image Size: 32 × 32
 - Number of Channels: 3 (RGB)
 
-### Training Setup
-
-- Epochs: 20
-- Patch Size: 4 × 4
-- `d_model`: 128
-- Number of Attention Heads: 4
-- Feed-Forward Dimension (`d_ff`): 512
-- Number of Encoder Layers (`N`): 4
+### Model Configuration
+- Patch size: 4 × 4
+- Model dimension (`d_model`): 128
+- Number of attention heads: 4
+- Feed-forward dimension (`d_ff`): 512
+- Number of Encoder Layers: 4
 - Dropout: 0.1
+
+### Training Setup
+- Epochs: 20
 - Optimizer: AdamW
-- Learning Rate: 1e-3
-- Loss Function: CrossEntropyLoss
+- Learning rate: 1e-3
+- Loss function: CrossEntropyLoss
 
 ### Results
 
