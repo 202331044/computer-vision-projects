@@ -15,6 +15,8 @@ This project consists of two parts:
   - Evaluated its performance on the AG News dataset.
   - Compared model performance across different numbers of attention heads and encoder layers.
 
+---
+
 ## 📚 Core Concepts
 
 ### RNN (Recurrent Neural Network)
@@ -24,8 +26,6 @@ A recurrent neural network that processes sequential data using a hidden state t
 **Problems**
 - **Sequential Dependency**: Tokens must be processed sequentially, making parallelization difficult.
 - **Long-Term Dependency**: Older information can be gradually lost as it is passed through hidden states.
-
----
 
 ### LSTM (Long Short-Term Memory)
 
@@ -43,8 +43,6 @@ An improved RNN architecture that uses a cell state and gates to better preserve
 **Disadvantages**
 - Sequential dependencies make parallelization difficult.
 
----
-
 ### Seq2Seq
 
 An Encoder-Decoder architecture commonly implemented using RNN or LSTM.
@@ -55,8 +53,6 @@ An Encoder-Decoder architecture commonly implemented using RNN or LSTM.
 **Problem**
 - A single context vector must contain the information needed to generate the entire output sequence, causing an **information bottleneck**.
 - Still suffers from the sequential dependency of RNN/LSTM.
-
----
 
 ### Attention
 
@@ -171,8 +167,6 @@ $$
 - Uses sinusoidal functions with different frequencies to represent positions.
 - Provides positional information to the Transformer.
 
----
-
 #### Encoder
 
 Each Encoder layer consists of:
@@ -231,8 +225,6 @@ Applies a fully connected network independently to each token representation.
 $$
 FFN(x)=W_2\text{ReLU}(W_1x+b_1)+b_2
 $$
-
----
 
 #### Decoder
 
@@ -315,19 +307,22 @@ This allows the Decoder to selectively retrieve relevant information from the En
 ### Implementation from scratch
 
 #### Training Setup
-
 - Epochs: 5
 - Optimizer: Adam
 - Learning rate: 1e-2
 - Loss function: CrossEntropyLoss
+
+#### Model Configuration
 - Number of Encoder/Decoder Layers (`N`): 2
-- Source vocabulary size: 6
-- Target vocabulary size: 6
-- `d_model`: 16
-- Source sequence length: 4
-- Target sequence length: 4
+- Model dimension (`d_model`): 16
 - Number of attention heads: 4
 - Feed-forward dimension (`d_ff`): 64
+
+#### Data Configuration
+- Source vocabulary size: 6
+- Target vocabulary size: 6
+- Source sequence length: 4
+- Target sequence length: 4
 
 #### Results
 

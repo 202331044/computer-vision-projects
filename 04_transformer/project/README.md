@@ -55,15 +55,16 @@ $$
 - Task: 4-class news topic classification
 - Maximum input sequence length: 128
 
-### Training Setup
-
-- Epochs: 10
-- `d_model`: 128
+### Model Configuration
+- Model dimension (`d_model`): 128
 - Number of attention heads: 4
 - Feed-forward dimension (`d_ff`): 512
-- Number of Encoder Layers (`N`): 2
+- Number of Encoder Layers: 2
 - Dropout: 0.1
-- `pad_idx`: 0
+- Padding index (`pad_idx`): 0
+
+### Training Setup
+- Epochs: 10
 - Optimizer: AdamW
 - Learning rate: 1e-3
 - Loss function: CrossEntropyLoss
